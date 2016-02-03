@@ -42,7 +42,7 @@ TransPort 9040
 ###### The steps 1 and 2 will be repeated after every update of tor service.
 
 ###### Please Note this script don't work if you have netctl because use openresolv.
-###### The steps 1 and 2 be repeated after update of tor.
+
 
   
 
