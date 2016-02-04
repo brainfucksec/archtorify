@@ -1,11 +1,11 @@
 ### Archtorify v1.2
 
-#### Torify entire Arch Linux systems 
+#### Transparent Torification script for Arch Linux  
 
 
 
 
-#### CONFIGS INSTRUCTIONS 
+#### Configs Instructions 
 
 
 ##### 1 - Modify the systemd's tor service file /usr/lib/systemd/system/tor.service as follows:
