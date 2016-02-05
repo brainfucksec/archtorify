@@ -5,7 +5,7 @@
 
 
 
-#### Configs Instructions 
+#### Install Instructions 
 
 
 ##### 1 - Modify the systemd's tor service file /usr/lib/systemd/system/tor.service as follows:
@@ -34,22 +34,10 @@ TransPort 9040
 ````
 
 
-
-##### NOTE FOR THE USER
+##### Note for the users:
 
 ###### Reference: https://wiki.archlinux.org/index.php/Tor 
 
 ###### The steps 1 and 2 will be repeated after every update of tor service.
 
 ###### Please Note this script don't work if you have netctl because use openresolv.
-
-
-  
-
-
-
-
-
-
-
-
