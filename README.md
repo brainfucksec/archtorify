@@ -5,7 +5,7 @@
 
 
 
-#### Install Instructions 
+#### Instructions 
 
 
 ##### 1 - Modify the systemd's tor service file /usr/lib/systemd/system/tor.service as follows:
