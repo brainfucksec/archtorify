@@ -34,9 +34,8 @@ TransPort 9040
 ````
 
 
-##### Note for the users:
+#### Note for the users:
 
-###### Reference: https://wiki.archlinux.org/index.php/Tor 
+##### [!] The steps 1 and 2 will be repeated after every update of tor service.
 
-###### [!] The steps 1 and 2 will be repeated after every update of tor service.
-
+##### Reference: https://wiki.archlinux.org/index.php/Tor
