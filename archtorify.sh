@@ -183,7 +183,7 @@ function start {
 	# save iptables file on /etc/iptables/iptables.rules
 	echo -e "$white[info]$green set new iptables rules\n"
 
-		echo '*nat
+	echo '*nat
 :PREROUTING ACCEPT [6:2126]
 :INPUT ACCEPT [0:0]
 :OUTPUT ACCEPT [17:6239]
