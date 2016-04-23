@@ -7,7 +7,6 @@
 # Dev: Brainfuck               		                       	          
 # Description: Bash script for transparent proxy trought Tor                   			   
 # Dependencies: Tor (pacman -S tor)			                   
-#                                               			                
 							   
 # GNU GENERAL PUBLIC LICENSE
 #
