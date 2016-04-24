@@ -1,6 +1,6 @@
 ### Archtorify v1.3
 
-#### Bash script for transparent proxy trought Tor 
+#### Bash script for transparent proxy trought Tor for Arch Linux
 
 
 
