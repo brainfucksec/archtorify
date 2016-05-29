@@ -2,12 +2,12 @@
 						       							   						           	  
 # Program: archtorify.sh                                       
 #       													   	
-# Version: 1.3 23/04/2016                              	   
+# Version: 1.3 - 23/04/2016                              	   
 # Operative System: Arch Linux  						       
 # Dev: Brainfuck               		                       	          
 # Description: Bash script for transparent proxy trought Tor                   			   
 # Dependencies: Tor (pacman -S tor)			                   
-							   
+                                              			                
 # GNU GENERAL PUBLIC LICENSE
 #
 # This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@ cat << "EOF"
                                     |___|
 V1.3
 Dev: Brainfuck
-https://www.github.com/BrainfuckSec
+https://github.com/BrainfuckSec
 EOF
 echo -e ""
 }
