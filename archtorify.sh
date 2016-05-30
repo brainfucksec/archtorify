@@ -43,7 +43,6 @@ V1.3
 Dev: Brainfuck
 https://github.com/BrainfuckSec
 EOF
-echo -e ""
 }
 
 
@@ -169,7 +168,7 @@ function start {
 	{ echo -e "\n$red[!] tor isn't installed, exiting...$RESETCOLOR"; exit 1; }
 	
 	check_defaults
-	echo -e "$white[info]$green Starting Transparent Torification$RESETCOLOR\n"
+	echo -e "\n$white[info]$green Starting Transparent Torification$RESETCOLOR\n"
 	disable_ufw 
 
 	# save iptables
