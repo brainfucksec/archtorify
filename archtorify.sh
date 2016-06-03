@@ -140,7 +140,7 @@ function check_defaults {
 	grep -q -x 'SocksPort 9050' /etc/tor/torrc
 	VAR6=$?
 	
-	grep -q -x 'DNSPort 5353' /etc/tor/torrc
+	grep -q -x 'DNSPort 53' /etc/tor/torrc
 	VAR7=$?
 	
 	grep -q -x 'TransPort 9040' /etc/tor/torrc
@@ -168,7 +168,7 @@ function start {
 	{ echo -e "\n$red[!] tor isn't installed, exiting...$RESETCOLOR"; exit 1; }
 	
 	check_defaults
-	echo -e "\n$white[info]$green Starting Transparent Torification$RESETCOLOR\n"
+	echo -e "$white\n[info]$green Starting Transparent Torification$RESETCOLOR\n"
 	disable_ufw 
 
 	# save iptables
@@ -179,6 +179,12 @@ function start {
 	iptables -F
 	iptables -t nat -F
 
+	# configure system's DNS resolver to use Tor's DNSPort on the loopback interface
+	echo -e "$white[info]$green configure system's DNS resolver to use Tor's DNSPort$RESETCOLOR\n"
+	cp /etc/resolv.conf /opt/resolv.conf.backup
+	rm /etc/resolv.conf
+	echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf 
+
 	# save iptables file on /etc/iptables/iptables.rules
 	echo -e "$white[info]$green set new iptables rules\n"
 
@@ -188,12 +194,12 @@ function start {
 :OUTPUT ACCEPT [17:6239]
 :POSTROUTING ACCEPT [6:408]
 
--A PREROUTING ! -i lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353
+-A PREROUTING ! -i lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
 -A PREROUTING ! -i lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 -A OUTPUT -o lo -j RETURN
 --ipv4 -A OUTPUT -d 192.168.0.0/16 -j RETURN
 -A OUTPUT -m owner --uid-owner "tor" -j RETURN
--A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353
+-A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
 -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 COMMIT
 
@@ -241,6 +247,12 @@ function stop {
 
 	systemctl stop tor.service iptables
 	sleep 4
+
+	# restore /etc/resolv.conf --> default nameserver
+	echo -e "$white[info]$green restore /etc/resolv.conf file with default DNS$RESETCOLOR\n"
+	rm /etc/resolv.conf
+	cp /opt/resolv.conf.backup /etc/resolv.conf
+	sleep 2	
 
 	enable_ufw
 	echo -e "$white[-]$green Transparent Proxy stopped$RESETCOLOR"
