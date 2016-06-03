@@ -1,6 +1,6 @@
 ### Archtorify v1.3
 
-#### Bash script for transparent proxy trought Tor for Arch Linux
+#### Bash script for transparent proxy trought Tor 
 
 
 
@@ -33,7 +33,7 @@ systemctl --system daemon-reload
 ```
 User tor
 SocksPort 9050
-DNSPort 5353
+DNSPort 53
 TransPort 9040
 ````
 
