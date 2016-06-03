@@ -150,7 +150,7 @@ function check_defaults {
 		echo -e "\n$red[!]$white Please add this line at /etc/tor/torrc file:\n"
 		echo -e 'User tor'
 		echo -e 'SocksPort 9050'
-		echo -e 'DNSPort 5353'
+		echo -e 'DNSPort 53'
 		echo -e 'TransPort 9040\n'
 		echo -e "Then restart the script\n"
 	exit 1
