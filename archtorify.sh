@@ -57,8 +57,8 @@ function check_root {
 
 # disable ufw (if is installed and active)
 function disable_ufw {
-	if command -v ufw status > /dev/null 2>&1 &&
-		ufw status | grep -q active$; then 
+	service='ufw.service'
+	if ps ax | grep -v grep | grep $service > /dev/null; then 
 		echo -e "$white[info]$green Firewall ufw is active, disabling..$RESETCOLOR\n"
 		ufw disable > /dev/null 2>&1
 		echo -e "$white[info]$green ufw disabled$RESETCOLOR\n"
@@ -70,8 +70,8 @@ function disable_ufw {
 
 # enable ufw
 function enable_ufw {
-	if command -v ufw status > /dev/null 2>&1 &&
-		ufw status | grep -q inactive$; then
+	service='ufw.service'
+	if ps ax | grep -v grep | grep $service > /dev/null; then
 		echo -e "$white[info]$green Enabling firewall ufw$RESETCOLOR\n"
 		ufw enable > /dev/null 2>&1
 		echo -e "$white[info]$green ufw enabled$RESETCOLOR\n"
