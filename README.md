@@ -3,8 +3,6 @@
 #### Bash script for transparent proxy trought Tor 
 
 
-
-
 #### Instructions 
 
 
