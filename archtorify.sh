@@ -1,13 +1,12 @@
 #!/bin/bash
-						       							   						           	  
-# Program: archtorify.sh                                       
-#       													   	
-# Version: 1.3 - 23/04/2016                              	   
-# Operative System: Arch Linux  						       
-# Dev: Brainfuck               		                       	          
-# Description: Bash script for transparent proxy trought Tor                   			   
-# Dependencies: Tor (pacman -S tor)			                   
-                                              			                
+
+# Program: archtorify.sh
+# Version: 1.4 - 09/06/2016
+# Operative System: Arch Linux
+# Description: Bash script for transparent proxy trought Tor
+# Dev: Brainfuck
+# https://github.com/BrainfuckSec
+# Dependencies: Tor, wget
 # GNU GENERAL PUBLIC LICENSE
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,12 +22,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# program / version
+program="archtorify"
+version="1.4"
 
 # define colors
-export green='\e[0;92m'
-export red='\e[0;91m'
-export white='\e[0;97m'
-export RESETCOLOR='\033[1;00m'
+export red=$'\e[0;91m'
+export green=$'\e[0;92m'
+export blue=$'\e[0;94m'
+export white=$'\e[0;97m'
+export endc=$'\e[0m'
 
 
 # banner
@@ -39,17 +42,16 @@ cat << "EOF"
 |     |  _|  _|   |  _| . |  _| |  _| | |
 |__|__|_| |___|_|_|_| |___|_| |_|_| |_  |
                                     |___|
-V1.3
+V1.4
 Dev: Brainfuck
-https://github.com/BrainfuckSec
 EOF
 }
 
 
-# check if root run this script
+# check if the program run as a root 
 function check_root {
 	if [ "$(id -u)" -ne 0 ]; then
-		echo -e "\n$red[!] Please run this script as a root!$RESETCOLOR\n" >&2
+		printf "${red}[!] Please run this program as a root!${endc}\n" >&2
 		exit 1
 	fi
 }
@@ -57,137 +59,138 @@ function check_root {
 
 # disable ufw (if is installed and active)
 function disable_ufw {
-	if ufw status | grep -q active$; then 
-		echo -e "$white[info]$green firewall ufw is active, disabling..$RESETCOLOR\n"
+	if ufw status | grep -q active$; then
+		printf "${blue}::${endc} ${green}Firewall ufw is active, disabling...${endc}\n"
 		ufw disable > /dev/null 2>&1
-		echo -e "$white[info]$green ufw disabled$RESETCOLOR\n"
+		printf "${blue}::${endc} ${green}ufw disabled${endc}\n"
 		sleep 3
 	else
 		ufw status | grep -q inactive$;
-		echo -e "$white[info]$green firewall ufw is inactive or not installed, continue..$RESETCOLOR\n"
+		printf "${blue}::${endc} ${green}Firewall ufw is inactive, continue...${endc}\n"
 	fi
 }
 
-# enable ufw
+
+# enable ufw 
 function enable_ufw {
 	if ufw status | grep -q inactive$; then
-		echo -e "$white[info]$green enabling firewall ufw$RESETCOLOR\n"
+		printf "${blue}::${endc} ${green}Enabling firewall ufw${endc}\n"
 		ufw enable > /dev/null 2>&1
-		echo -e "$white[info]$green ufw enabled$RESETCOLOR\n"
+		printf "${blue}::${endc} ${green}ufw enabled${endc}\n"
 		sleep 3
 	else
-		echo -e "$white[info]$green firewall ufw is not installed, continue..$RESETCOLOR"
+		printf "${blue}::${endc} ${green}Firewall ufw isn't installed, continue...${endc}\n"
 	fi
 }
 
 
-# check current Tor node IP
+# check current public IP 
 function check_ip {
-	csv=$(curl -A "Mozilla/5.0" -skLm 10 http://ip-api.com/json)
-	public_ip=$(echo "$csv" | grep -oP "(?<=\"query\":\")[^\"]+")
-	city=$(echo "$csv" | grep -oP "(?<=\"city\":\")[^\"]+" | tr [:lower:] [:upper:])
-	country=$(echo "$csv" | grep -oP "(?<=\"country\":\")[^\"]+" | tr [:lower:] [:upper:])
-	ISP=$(echo "$csv" | grep -oP "(?<=\"isp\":\")[^\"]+" | tr [:lower:] [:upper:])
-
-	echo -e "===============================
-
-IP  : $public_ip
-City: $city - $country
-ISP : $ISP
-
-==============================="
+	local ext_ip=$(wget -qO- ipinfo.io/ip)
+	local city=$(wget -qO- ipinfo.io/city)
+	printf "${blue}::${endc} ${green}Current public IP:${endc}\n"
+	printf "${white}%s%s${endc}\n" "$ext_ip - $city"
 }
 
 
-# check default configurations 
-function check_defaults {
-	# check /usr/lib/systemd/system/tor.service
+# check default configurations
+function check_default {
+	# tor is installed ?
+	command -v tor > /dev/null 2>&1 ||
+	{ printf "\n${red}[!] Tor isn't installed, exiting...${endc}\n"; exit 1; }
+
+	# wget is installed ?
+	command -v wget > /dev/null 2>&1 ||
+	{ printf "\n${red}[!] wget isn't installed, exiting...${endc}\n"; exit 1; }
+
+	# check file /usr/lib/systemd/system/tor.service
+	# example of default file "tor.service-example"
 	grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
 	VAR1=$?
-	
+
 	grep -q -x 'User=root' /usr/lib/systemd/system/tor.service
 	VAR2=$?
-	
+
 	grep -q -x 'Group=root' /usr/lib/systemd/system/tor.service
 	VAR3=$?
 	
 	grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
 	VAR4=$?
-	
-	if [ $VAR1 -ne 0 ] || [ $VAR2 -ne 0 ] || [ $VAR3 -ne 0 ] || [ $VAR4 -ne 0 ]; then 
-		echo -e "\n$red[!]$white Please add this lines at /usr/lib/systemd/system/tor.service file:\n"
-		echo -e '[Service]'
-		echo -e 'User=root'
-		echo -e 'Group=root'
-		echo -e 'Type=simple\n'
-		echo -e "Then restart the script\n"
+
+	if [ $VAR1 -ne 0 ] || [ $VAR2 -ne 0 ] || [ $VAR3 -ne 0 ] || [ $VAR4 -ne 0 ]; then
+		printf "\n${red}[!]${endc} ${green}Please add this lines at /usr/lib/systemd/tor.service file:${endc}\n" >&2
+		printf "${green}You can read 'tor.service-example' file for an example of configuration${endc}\n" >&2
+		printf "${white}[Service]${endc}\n"
+		printf "${white}User=root${endc}\n"
+		printf "${white}Group=root${endc}\n"
+		printf "${white}Type=simple${endc}\n"
 	exit 1
 	fi
-	
-	# check owner and access rights of /var/lib/tor 
-	if [ "$(stat -c '%U' /var/lib/tor)" != "tor" ] && [ "$(stat -c '%a' /var/lib/tor)" != "755" ]; then
-		echo -e "\n$red[!]$white Please give the right permissions and owner of /var/lib/tor folder:\n"
-		echo -e "# chown -R tor:tor /var/lib/tor\n"
-		echo -e "# chmod -R 755 /var/lib/tor\n"
-		echo -e "# systemctl --system daemon-reload\n"
-		echo -e "Then restart the script\n"
+
+	# check owner and access rights of /var/lib/tor
+	# tor:tor
+	# chmod 755 
+	if [ "$(stat -c '%U' /var/lib/tor)" != "tor" ] && 
+		[ "$(stat -c '%a' /var/lib/tor)" != "755" ]; then
+		printf "${red}[!]${endc} ${green}Please give the right permissions and owner of /var/lib/tor folder${endc}\n"
+		printf "${white}# chown -R tor:tor /var/lib/tor${endc}\n"
+		printf "${white}# chmod -R 755 /var/lib/tor${endc}\n"
+		printf "${white}# systemctl --system daemon-reload${endc}\n"
 	exit 1
 	fi
-		
-	# check /etc/tor/torrc
+
+	# check file '/etc/tor/torrc'
 	grep -q -x 'User tor' /etc/tor/torrc
 	VAR5=$?
-	
+
 	grep -q -x 'SocksPort 9050' /etc/tor/torrc
 	VAR6=$?
-	
+
 	grep -q -x 'DNSPort 53' /etc/tor/torrc
 	VAR7=$?
-	
+
 	grep -q -x 'TransPort 9040' /etc/tor/torrc
 	VAR8=$?
-	
+
 	if [ $VAR5 -ne 0 ] || [ $VAR6 -ne 0 ] || [ $VAR7 -ne 0 ] || [ $VAR8 -ne 0 ]; then
-		echo -e "\n$red[!]$white Please add this line at /etc/tor/torrc file:\n"
-		echo -e 'User tor'
-		echo -e 'SocksPort 9050'
-		echo -e 'DNSPort 53'
-		echo -e 'TransPort 9040\n'
-		echo -e "Then restart the script\n"
+		printf "${red}[!]${endc} ${green}Please add this line at /etc/tor/torrc file${endc}\n"
+		printf "${white}User tor${endc}\n"
+		printf "${white}SocksPort 9050${endc}\n"
+		printf "${white}DNSPort 53${endc}\n"
+		printf "${white}TransPort 9040${endc}\n"
 	exit 1
 	fi
 }
 
 
-# the start function
+# then if all ok, start the script
 function start {
 	banner
 	check_root
- 
-	# check if tor is installed
-	command -v tor > /dev/null 2>&1 || 
-	{ echo -e "\n$red[!] tor isn't installed, exiting...$RESETCOLOR"; exit 1; }
-	
-	check_defaults
-	echo -e "$white\n[info]$green Starting Transparent Torification$RESETCOLOR\n"
-	disable_ufw 
+	check_default 
 
-	# save iptables
-	echo -e "$white[info]$green save iptables rules$RESETCOLOR\n"
+	printf "\n${blue}::${endc} ${green}Starting Transparent Proxy${endc}\n"
+	disable_ufw
+	sleep 1
+
+	# save iptables 
+	printf "${blue}::${endc} ${green}Backup iptables rules${endc}\n"
 	iptables-save > /opt/iptables.backup
+	sleep 2 
 
 	# flush iptables
+	printf "${blue}::${endc} ${green}Flush iptables rules${endc}\n"
 	iptables -F
 	iptables -t nat -F
 
 	# configure system's DNS resolver to use Tor's DNSPort on the loopback interface
-	echo -e "$white[info]$green configure system's DNS resolver to use Tor's DNSPort$RESETCOLOR\n"
+	printf "${blue}::${endc} ${green}Configure system's DNS resolver to use Tor's DNSPort${endc}\n"
 	cp /etc/resolv.conf /opt/resolv.conf.backup
 	rm /etc/resolv.conf
-	echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf 
+	echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf
 
-	# save iptables file on /etc/iptables/iptables.rules
-	echo -e "$white[info]$green set new iptables rules\n"
+	# write new iptables rules on file /etc/iptables/iptables.rules
+	printf "${blue}::${endc} ${green}Set new iptables rules${endc}\n"
 
 	echo '*nat
 :PREROUTING ACCEPT [6:2126]
@@ -224,88 +227,127 @@ COMMIT
 --ipv4 -A OUTPUT -j REJECT --reject-with icmp-port-unreachable
 --ipv6 -A OUTPUT -j REJECT
 COMMIT' >> /etc/iptables/iptables.rules
-	
-	# start tor.service
-	systemctl start tor.service iptables
+sleep 4
 
-	echo -e "$white[+]$green Transparent Proxy activated, your system is under Tor$RESETCOLOR"
-	sleep 3
+	# start tor.service with iptables rules 
+	printf "${blue}::${endc} ${green}Start Tor service${endc}\n"
+	systemctl start tor.service iptables 
+	sleep 6
+
+	printf "${blue}[+]${endc} ${white}Transparent Proxy activated, your system is under Tor${endc}\n"
 }
 
 
-# the stop function
+# stop transparent proxy and return to clearnet 
 function stop {
-	check_root
-	echo -e "\n$white[info]$green Stopping Transparent Proxy$RESETCOLOR\n"
+	banner 
+	check_root 
 
-	# stop tor.service - restore default iptables rules
-	echo -e "$white[info]$green stop tor service and restore iptables rules$RESETCOLOR\n"
+	printf "\n${blue}::${endc} ${green}Stopping Transparent Proxy${endc}\n"
+	sleep 2
+
+	# flush iptables
+	printf "${blue}::${endc} ${green}Flush iptables rules${endc}\n"
 	iptables -F
 	iptables -t nat -F
 
+	# restore iptables 
+	printf "${blue}::${endc} ${green}Restore the default iptables rules${endc}\n"
 	rm /etc/iptables/iptables.rules
 	iptables-restore < /opt/iptables.backup
 
-	systemctl stop tor.service iptables
+	# stop tor.service
+	printf "${blue}::${endc} ${green}Stop tor service${endc}\n"
+	systemctl stop tor.service 
 	sleep 4
 
-	# restore /etc/resolv.conf --> default nameserver
-	echo -e "$white[info]$green restore /etc/resolv.conf file with default DNS$RESETCOLOR\n"
+	# restore /etc/resolv.conf --> default nameserver 
+	printf "${blue}::${endc} ${green}Restore /etc/resolv.conf file with default DNS${endc}\n"
 	rm /etc/resolv.conf
 	cp /opt/resolv.conf.backup /etc/resolv.conf
-	sleep 2	
+	sleep 2
 
+	# enable firewall ufw 
 	enable_ufw
-	echo -e "$white[-]$green Transparent Proxy stopped$RESETCOLOR"
+	printf "${blue}[-]${endc} ${white}Transparent Proxy stopped${endc}\n"
 }
 
 
-# restart tor and change ip 
+# check current status of tor.service 
+function status {
+	check_root
+	local service=$(pgrep tor | wc -l)
+	printf "${blue}::${endc} ${green}Check current status of tor.service${endc}\n"
+	if [ "$service" -eq 0 ]; then
+		printf "${red}[!] tor.service is not running${endc}\n"
+	else		
+		printf "${blue}[+]${endc} ${white}tor.service is active${endc}\n"
+	fi
+}
+
+
 function restart {
 	check_root
 
-	echo -e "$white[info]$green Restart Tor Service and change IP$RESETCOLOR\n"
+	printf "${blue}::${endc} ${green}Restart tor service and change IP${endc}\n"
 	systemctl restart tor.service iptables
 	sleep 4
 	check_ip
 }
 
 
-# cases (start stop restart checkip)
+# display program and tor version then exit
+function print_version {
+	printf "${white}%s%s$program version $version${endc}\n"
+	printf "${white}$(tor --version)${endc}\n"
+	exit 0
+}
+
+
+# print help menu' 
+function help_menu {
+	banner	
+	printf "\n${white}Usage:${endc}\n\n"
+	printf "${white}┌─╼${endc} ${red}$USER${endc} $white╺─╸${endc} ${red}$(hostname)${endc}\n"
+	printf "${white}└───╼${endc} ${green}./%s$program <argument>${endc}\n"
+
+	printf "\n${white}Arguments:${endc}\n\n"
+	printf "${red}help${endc}        ${green}show this help message and exit${endc}\n"
+	printf "${red}start${endc}       ${green}start transparent proxy for tor${endc}\n"
+	printf "${red}stop${endc}        ${green}reset iptables and return to clear navigation${endc}\n"
+	printf "${red}status${endc}      ${green}check program status${endc}\n"
+	printf "${red}restart${endc}     ${green}restart tor service and change IP${endc}\n"
+	printf "${red}checkip${endc}     ${green}print current public IP${endc}\n"
+	printf "${red}version${endc}     ${green}display program and tor version then exit${endc}\n"  
+	exit 0
+}
+
+
+# cases user input
 case "$1" in
 	start)
 		start
-	;;
+		;;
 	stop)
 		stop
-	;;
+		;;
 	restart)
 		restart
-	;;
+		;;
+	status)
+		status
+		;;
 	checkip)
 		check_ip
-	;;
-   *)
-
-
-# program usage 
-banner
-echo -e "\n$white USAGE:
-
-┌─╼ $red$USER$white ╺─╸ $red$(hostname)$white
-└───╼ $green""./archtorify.sh $white[ $green""start$white | $green""stop$white | $green""restart$white | $green""checkip $white""]
-
-$red start$white -$green Start Transparent Proxy for Tor
-
-$red stop$white -$green Reset iptables and return to clear navigation
-
-$red restart$white -$green Restart Tor Service and change IP
-
-$red checkip$white -$green Print current Tor node IP
-$RESETCOLOR" >&2 
+		;;
+	version)
+		print_version
+		;;
+	help)
+		help_menu
+		;;
+	*)
+help_menu
 exit 1
-;;
-esac
-echo -e $RESETCOLOR
 
-exit 0 
+esac

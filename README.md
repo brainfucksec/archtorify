@@ -1,11 +1,11 @@
-### Archtorify v1.3
+## Archtorify v1.4
 
-#### Bash script for transparent proxy trought Tor 
+### Bash script for transparent proxy through Tor
+### Operative System: Arch Linux
 
-#### Instructions 
+### Instructions
 
-
-##### 1 - Modify the systemd's tor service file /usr/lib/systemd/system/tor.service as follows:
+#### 1 - Modify the systemd's tor service file /usr/lib/systemd/system/tor.service as follows:
 ```
 [Service]
 User=root
@@ -13,20 +13,22 @@ Group=root
 Type=simple
 ```
 
+#### If you have a problem when edit this file you can read an example file 'tor.service-example'
 
-##### 2 - The process will be run as tor user. For this purpose change user and group ID to tor and also make it writeable: 
-```
+
+#### 2 - The process of tor will be run as tor user. For this purpose change user and group ID to tor and also make it writeable: 
+```bash
 chown -R tor:tor /var/lib/tor
 chmod -R 755 /var/lib/tor
 ```
 
-##### Now save changes and run the daemon: 
-```
+#### 3 - Now save changes and run the daemon:
+```bash
 systemctl --system daemon-reload
 ```
 
 
-##### 3 - Add the follows at the end of /etc/tor/torrc file:
+#### 3 - Modify /etc/tor/torrc file, add the follows:
 ```
 User tor
 SocksPort 9050
@@ -34,12 +36,29 @@ DNSPort 53
 TransPort 9040
 ````
 
-##### Note for the users:
+#### 4 - Start program, chmod and run as a root 
+```bash
+chmod +x archtorify.sh
 
-###### The steps 1 and 2 will be repeated after every update of tor service.
+./archtorify start
+```
 
-###### Please Note this script don't work if you have netctl because use openresolv.
+#### 5 Use help argument or run the program without arguments for help menu'
+```bash
+./archtorify.sh help
+```
 
 
-##### Reference: https://wiki.archlinux.org/index.php/Tor
+
+#### Note:
+
+The steps 1 and 2 will be repeated after every update of tor, anyway the program check these files for you.
+Configuration of transparent proxy in Arch Linux is little hard, if you have a problem please read the Arch Wiki: https://wiki.archlinux.org/index.php/Tor
+Arch Linux Network Configuration: https://wiki.archlinux.org/index.php/Network_configuration
+Tor project page about transparent proxy and DNS proxy: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
+
+
+
+
+
 

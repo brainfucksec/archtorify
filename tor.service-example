@@ -1,0 +1,18 @@
+# This is an example config file of default: /usr/lib/systemd/system/tor.service
+
+[Unit]
+Description=Anonymizing Overlay Network
+After=network.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+ExecStart=/usr/bin/tor -f /etc/tor/torrc
+ExecReload=/usr/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+LimitNOFILE=8192
+PrivateDevices=yes
+
+[Install]
+WantedBy=multi-user.target
