@@ -57,6 +57,7 @@ The steps 1 and 2 will be repeated after every update of tor, anyway the program
 Configuration of transparent proxy in Arch Linux is little hard, if you have a problem please read the Arch Wiki: https://wiki.archlinux.org/index.php/Tor
 
 Arch Linux Network Configuration: https://wiki.archlinux.org/index.php/Network_configuration
+
 Tor project page about transparent proxy and DNS proxy: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 
 
