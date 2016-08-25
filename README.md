@@ -66,8 +66,10 @@ Arch Linux Network Configuration: https://wiki.archlinux.org/index.php/Network_c
 
 Tor project page about transparent proxy and DNS proxy: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 
-Added the option for generate new Tor Entry Guards, this is usually something to avoid unless you know what you are doing, for more information please read: 
+Added the option for generate new Tor Entry Guards, this is usually something to avoid unless you know what you are doing, for more information please read here: 
+
 https://www.whonix.org/wiki/Tor#Non-Persistent_Entry_Guards 
+
 https://forums.whonix.org/t/persistent-tor-entry-guard-relays-can-make-you-trackable-across-different-physical-locations/2090
 
 
