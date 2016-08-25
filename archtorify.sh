@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.4 - 09/06/2016
+# Version: 1.5.1 - 24/08/2016
 # Operative System: Arch Linux
 # Description: Bash script for transparent proxy trought Tor
 # Dev: Brainfuck
 # https://github.com/BrainfuckSec
-# Dependencies: Tor, wget
+# Dependencies: tor, wget
+
 # GNU GENERAL PUBLIC LICENSE
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,7 +25,7 @@
 
 # program / version
 program="archtorify"
-version="1.4"
+version="1.5.1"
 
 # define colors
 export red=$'\e[0;91m'
@@ -36,15 +37,15 @@ export endc=$'\e[0m'
 
 # banner
 function banner {
-cat << "EOF"
+printf "${white}
  _____         _   _           _ ___     
 |  _  |___ ___| |_| |_ ___ ___|_|  _|_ _ 
 |     |  _|  _|   |  _| . |  _| |  _| | |
 |__|__|_| |___|_|_|_| |___|_| |_|_| |_  |
                                     |___|
-V1.4
-Dev: Brainfuck
-EOF
+                                             
+Version: 1.5.1                        
+Dev: Brainfuck${endc}\n"
 }
 
 
@@ -104,7 +105,7 @@ function check_default {
 	{ printf "\n${red}[!] wget isn't installed, exiting...${endc}\n"; exit 1; }
 
 	# check file /usr/lib/systemd/system/tor.service
-	# example of default file "tor.service-example"
+	# example config file: "tor.service-example"
 	grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
 	VAR1=$?
 
@@ -163,11 +164,16 @@ function check_default {
 }
 
 
-# then if all ok, start the script
+# if all configurations are ok, start the script
 function start {
 	banner
 	check_root
-	check_default 
+	check_default
+
+	# check status of tor.service and stop it if is active 
+	if systemctl is-active tor.service > /dev/null 2>&1; then
+		systemctl stop tor.service
+	fi
 
 	printf "\n${blue}::${endc} ${green}Starting Transparent Proxy${endc}\n"
 	disable_ufw
@@ -229,7 +235,20 @@ COMMIT
 COMMIT' >> /etc/iptables/iptables.rules
 sleep 4
 
-	# start tor.service with iptables rules 
+	# if you want, get fresh Tor entry guards by regenerating Tor state file
+	# /var/lib/tor/state is deleted, it is created again at tor.service startup
+	printf "${blue}::${endc} ${green}Get fresh Tor entry guards? [y/n]${endc}"
+	read -p "${green}:${endc} " yn
+	case $yn in
+		[yY]|[y|Y] )
+			rm /var/lib/tor/state
+			printf "${blue}[+]${endc} ${white}New Tor entry guards obtained${endc}\n"
+			;;
+		*)
+			;;
+	esac
+	
+	# start tor.service 	
 	printf "${blue}::${endc} ${green}Start Tor service${endc}\n"
 	systemctl start tor.service iptables 
 	sleep 6
@@ -257,7 +276,7 @@ function stop {
 	iptables-restore < /opt/iptables.backup
 
 	# stop tor.service
-	printf "${blue}::${endc} ${green}Stop tor service${endc}\n"
+	printf "${blue}::${endc} ${green}Stop Tor service${endc}\n"
 	systemctl stop tor.service 
 	sleep 4
 
@@ -275,21 +294,20 @@ function stop {
 
 # check current status of tor.service 
 function status {
-	check_root
-	local service=$(pgrep tor | wc -l)
-	printf "${blue}::${endc} ${green}Check current status of tor.service${endc}\n"
-	if [ "$service" -eq 0 ]; then
-		printf "${red}[!] tor.service is not running${endc}\n"
+	check_root	
+	printf "${blue}::${endc} ${green}Check current status of Tor service${endc}\n"
+	if systemctl is-active tor.service > /dev/null 2>&1; then
+		printf "${blue}[+]${endc} ${white}Tor service is active${endc}\n"
 	else		
-		printf "${blue}[+]${endc} ${white}tor.service is active${endc}\n"
+		printf "${red}[!] Tor service is not running${endc}\n"
 	fi
 }
 
 
+# restart tor.service and change IP
 function restart {
 	check_root
-
-	printf "${blue}::${endc} ${green}Restart tor service and change IP${endc}\n"
+	printf "${blue}::${endc} ${green}Restart Tor service and change IP${endc}\n"
 	systemctl restart tor.service iptables
 	sleep 4
 	check_ip
@@ -309,41 +327,41 @@ function help_menu {
 	banner	
 	printf "\n${white}Usage:${endc}\n\n"
 	printf "${white}┌─╼${endc} ${red}$USER${endc} $white╺─╸${endc} ${red}$(hostname)${endc}\n"
-	printf "${white}└───╼${endc} ${green}./%s$program <argument>${endc}\n"
+	printf "${white}└───╼${endc} ${green}./%s$program <--argument>${endc}\n"
 
 	printf "\n${white}Arguments:${endc}\n\n"
-	printf "${red}help${endc}        ${green}show this help message and exit${endc}\n"
-	printf "${red}start${endc}       ${green}start transparent proxy for tor${endc}\n"
-	printf "${red}stop${endc}        ${green}reset iptables and return to clear navigation${endc}\n"
-	printf "${red}status${endc}      ${green}check program status${endc}\n"
-	printf "${red}restart${endc}     ${green}restart tor service and change IP${endc}\n"
-	printf "${red}checkip${endc}     ${green}print current public IP${endc}\n"
-	printf "${red}version${endc}     ${green}display program and tor version then exit${endc}\n"  
+	printf "${red}--help${endc}        ${green}show this help message and exit${endc}\n"
+	printf "${red}--start${endc}       ${green}start transparent proxy for tor${endc}\n"
+	printf "${red}--stop${endc}        ${green}reset iptables and return to clear navigation${endc}\n"
+	printf "${red}--status${endc}      ${green}check program status${endc}\n"
+	printf "${red}--restart${endc}     ${green}restart tor service and change IP${endc}\n"
+	printf "${red}--checkip${endc}     ${green}print current public IP${endc}\n"
+	printf "${red}--version${endc}     ${green}display program and tor version then exit${endc}\n"  
 	exit 0
 }
 
 
 # cases user input
 case "$1" in
-	start)
+	--start)
 		start
 		;;
-	stop)
+	--stop)
 		stop
 		;;
-	restart)
+	--restart)
 		restart
 		;;
-	status)
+	--status)
 		status
 		;;
-	checkip)
+	--checkip)
 		check_ip
 		;;
-	version)
+	--version)
 		print_version
 		;;
-	help)
+	--help)
 		help_menu
 		;;
 	*)
