@@ -59,10 +59,16 @@ chmod +x archtorify.sh
 #### Note:
 
 The steps 1 and 2 will be repeated after every update of tor, anyway the program check these files for you.
+
 Configuration of transparent proxy in Arch Linux is little hard, if you have a problem please read the Arch Wiki: https://wiki.archlinux.org/index.php/Tor
+
 Arch Linux Network Configuration: https://wiki.archlinux.org/index.php/Network_configuration
+
 Tor project page about transparent proxy and DNS proxy: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
-Added the option for generate new Tor Entry Guards, this is usually something to avoid unless you know what you are doing, for more information please read: https://www.whonix.org/wiki/Tor#Non-Persistent_Entry_Guards and https://forums.whonix.org/t/persistent-tor-entry-guard-relays-can-make-you-trackable-across-different-physical-locations/2090
+
+Added the option for generate new Tor Entry Guards, this is usually something to avoid unless you know what you are doing, for more information please read: 
+https://www.whonix.org/wiki/Tor#Non-Persistent_Entry_Guards 
+https://forums.whonix.org/t/persistent-tor-entry-guard-relays-can-make-you-trackable-across-different-physical-locations/2090
 
 
 
