@@ -1,4 +1,4 @@
-# This is an example config file of default: /usr/lib/systemd/system/tor.service
+# This is an example config file of: /usr/lib/systemd/system/tor.service
 
 [Unit]
 Description=Anonymizing Overlay Network
