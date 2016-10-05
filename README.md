@@ -1,7 +1,7 @@
-## Archtorify v1.5.1
+## Archtorify v1.6.0
 
-### Bash script for transparent proxy through Tor
-### Operative System: Arch Linux
+### Transparent proxy through Tor for Arch Linux
+
 
 ### Instructions
 
@@ -20,7 +20,7 @@ Group=root
 Type=simple
 ```
 
-#### If you have a problem when edit this file you can read an example file 'tor.service-example'
+#### If you have a problem when edit this file, you can read an example file 'tor.service-example'
 
 
 #### 3 - The process of tor will be run as tor user. For this purpose change user and group ID to tor and also make it writeable: 
@@ -46,7 +46,7 @@ systemctl --system daemon-reload
 ```bash
 chmod +x archtorify.sh
 
-./archtorify start
+./archtorify --start
 ```
 
 #### 7 Use help argument or run the program without arguments for help menu'
@@ -58,7 +58,7 @@ chmod +x archtorify.sh
 
 #### Note:
 
-The steps 1 and 2 will be repeated after every update of tor, anyway the program check these files for you.
+The steps 2 and 5 will be repeated after every update of tor, anyway the program check these files for you.
 
 Configuration of transparent proxy in Arch Linux is little hard, if you have a problem please read the Arch Wiki: https://wiki.archlinux.org/index.php/Tor
 
