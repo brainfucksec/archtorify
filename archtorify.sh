@@ -55,7 +55,7 @@ Author: Brainfuck${endc}\n"
 # check if the program run as a root
 function check_root {
 	if [ "$(id -u)" -ne 0 ]; then
-		printf "${red}%s${endc}\n" "[ failed ] Please run this program as a root!" >&2
+		printf "\n${red}%s${endc}\n" "[ failed ] Please run this program as a root!" >&2
 		exit 1
 	fi
 }
