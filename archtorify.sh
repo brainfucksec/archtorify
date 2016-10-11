@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.0 - 28/09/2016
+# Version: 1.6.1 
 # Operating System: Arch Linux
 # Description: Transparent proxy trough Tor for Arch Linux
 # Author: Brainfuck
@@ -26,7 +26,7 @@
 
 # program / version
 program="archtorify"
-version="1.6.0"
+version="1.6.1"
 
 # define colors
 export red=$'\e[0;91m'
@@ -252,7 +252,7 @@ sleep 4
 	case $yn in
 		[yY]|[y|Y] )
 			rm -v /var/lib/tor/state
-			printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "New Tor entry guards obtained"
+			printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "When tor.service start, new Tor entry guards will obtained"
 			;;
 		*)
 			;;
@@ -261,7 +261,10 @@ sleep 4
 	# start tor.service
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Start Tor service"
 	systemctl start tor.service iptables
-	sleep 6
+	sleep 6	
+	if systemctl is-active tor.service > /dev/null 2>&1; then		
+		printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active"
+	fi
 
 	printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Transparent Proxy activated, your system is under Tor"
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "use --status argument for check the program status"
@@ -273,7 +276,7 @@ sleep 4
 function stop {
 	check_root
 
-	printf "\n${blue}%s${endc} ${green}%s${endc}\n"  "::" "Stopping Transparent Proxy"
+	printf "${blue}%s${endc} ${green}%s${endc}\n"  "::" "Stopping Transparent Proxy"
 	sleep 2
 
 	# flush iptables
@@ -349,8 +352,9 @@ function restart {
 	sleep 2
 	# check tor.service after restart
 	if systemctl is-active tor.service > /dev/null 2>&1; then
-		printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active and your IP is changed"
-		printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "use --status argument for check public IP"
+		printf "${blue}%s${endc} ${white}%s${endc}\n\n" "[ ok ]" "Tor service restarted"
+		# run check_status function
+		check_status
 	else
 		printf "${red}%s${endc}\n" "[-] Tor service is not running!"
 	fi
