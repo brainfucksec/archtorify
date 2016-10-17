@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.1 
+# Version: 1.6.2
 # Operating System: Arch Linux
-# Description: Transparent proxy trough Tor for Arch Linux
+# Description: Transparent proxy trough Tor 
 # Author: Brainfuck
 # https://github.com/BrainfuckSec
 # Dependencies: tor, wget
@@ -26,7 +26,7 @@
 
 # program / version
 program="archtorify"
-version="1.6.1"
+version="1.6.2"
 
 # define colors
 export red=$'\e[0;91m'
@@ -39,11 +39,15 @@ export endc=$'\e[0m'
 # banner
 function banner {
 printf "${white}
- _____         _   _           _ ___
-|  _  |___ ___| |_| |_ ___ ___|_|  _|_ _
-|     |  _|  _|   |  _| . |  _| |  _| | |
-|__|__|_| |___|_|_|_| |___|_| |_|_| |_  |
-                                    |___|
+*********************************************
+*                                           *
+*  _____         _   _           _ ___      *
+* |  _  |___ ___| |_| |_ ___ ___|_|  _|_ _  *
+* |     |  _|  _|   |  _| . |  _| |  _| | | *
+* |__|__|_| |___|_|_|_| |___|_| |_|_| |_  | *
+*                                     |___| *
+*                                           *
+*********************************************
 
 Transparent proxy trough Tor for Arch Linux
 
@@ -198,7 +202,6 @@ function start {
 	# configure system's DNS resolver to use Tor's DNSPort on the loopback interface
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Configure system's DNS resolver to use Tor's DNSPort"
 	cp -vf /etc/resolv.conf /opt/resolv.conf.backup
-	rm /etc/resolv.conf
 	echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf
 	sleep 2
 
@@ -261,13 +264,11 @@ sleep 4
 	# start tor.service
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Start Tor service"
 	systemctl start tor.service iptables
-	sleep 6	
-	if systemctl is-active tor.service > /dev/null 2>&1; then		
-		printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active"
-	fi
+	sleep 6			
+	printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active"
 
 	printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Transparent Proxy activated, your system is under Tor"
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "use --status argument for check the program status"
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "[ info ]" "use --status argument for check the program status"
 }
 
 
@@ -324,9 +325,9 @@ function check_status {
 	# check current public IP
 	printf "\n${blue}%s${endc} ${green}%s${endc}\n" "::" "Checking your public IP, please wait..."
 	local ext_ip
-	ext_ip=$(wget -qO- ipinfo.io/ip)
+	ext_ip=$(wget -qO- -t 1 --timeout=15 ipinfo.io/ip)
 	local city
-	city=$(wget -qO- ipinfo.io/city)
+	city=$(wget -qO- -t 1 --timeout=15 ipinfo.io/city)
 	
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Current public IP:"
 	printf "${white}%s%s${endc}\n\n" "$ext_ip - $city"
@@ -336,6 +337,7 @@ function check_status {
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "run command 'netstat -tulpn'"
 	sleep 5 &
 	netstat -tulpn
+	printf "\n${blue}%s${endc} ${green}%s${endc}\n" "[ info ]" "If your network security is ok, you have only 'tor' in listen"
 	exit 0
 }
 
@@ -352,7 +354,7 @@ function restart {
 	sleep 2
 	# check tor.service after restart
 	if systemctl is-active tor.service > /dev/null 2>&1; then
-		printf "${blue}%s${endc} ${white}%s${endc}\n\n" "[ ok ]" "Tor service restarted"
+		printf "${blue}%s${endc} ${white}%s${endc}\n\n" "[ ok ]" "Tor is active and your IP is changed"
 		# run check_status function
 		check_status
 	else
