@@ -1,4 +1,4 @@
-## Archtorify v1.6.1
+## Archtorify v1.6.2
 
 ### Transparent proxy through Tor for Arch Linux
 
@@ -66,7 +66,7 @@ Arch Linux Network Configuration: https://wiki.archlinux.org/index.php/Network_c
 
 Tor project page about transparent proxy and DNS proxy: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 
-Added the option for generate new Tor Entry Guards, this is usually something to avoid unless you know what you are doing, for more information please read here: 
+New Tor Entry Guards: this is usually something to avoid unless you know what you are doing, for more information please read here: 
 
 https://www.whonix.org/wiki/Tor#Non-Persistent_Entry_Guards 
 
