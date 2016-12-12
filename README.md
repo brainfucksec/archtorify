@@ -1,4 +1,4 @@
-## Archtorify v1.6.2
+## Archtorify v1.6.3
 
 ### Transparent proxy through Tor for Arch Linux
 
