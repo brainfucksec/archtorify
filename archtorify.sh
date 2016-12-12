@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.2
+# Version: 1.6.3
 # Operating System: Arch Linux
 # Description: Transparent proxy trough Tor 
-# Author: Brainfuck
-# https://github.com/BrainfuckSec
 # Dependencies: tor, wget
+# 
+# Copyright (C) 2015, 2016 Brainfuck 
 
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -26,7 +26,7 @@
 
 # program / version
 program="archtorify"
-version="1.6.2"
+version="1.6.3"
 
 # define colors
 export red=$'\e[0;91m'
@@ -208,6 +208,8 @@ function start {
 	# write new iptables rules on file /etc/iptables/iptables.rules
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Set new iptables rules"
 
+	# NOTE --> add exception rules on iptables for allow 
+	# traffic on Virtualbox NAT Network '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN'
 	echo '*nat
 :PREROUTING ACCEPT [6:2126]
 :INPUT ACCEPT [0:0]
@@ -218,6 +220,7 @@ function start {
 -A PREROUTING ! -i lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 -A OUTPUT -o lo -j RETURN
 --ipv4 -A OUTPUT -d 192.168.0.0/16 -j RETURN
+--ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN
 -A OUTPUT -m owner --uid-owner "tor" -j RETURN
 -A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
 -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
