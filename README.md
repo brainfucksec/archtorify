@@ -42,18 +42,20 @@ TransPort 9040
 systemctl --system daemon-reload
 ```
 
-#### 6 - Chmod and run program as a root 
+#### 6 Use help argument or run the program without arguments for help menu'
+```bash
+./archtorify.sh --help
+```
+![alt text](http://i.hizliresim.com/bkk2Pd.png)
+
+
+#### 7 - Chmod and run program as a root 
 ```bash
 chmod +x archtorify.sh
 
 ./archtorify --start
 ```
-
-#### 7 Use help argument or run the program without arguments for help menu'
-```bash
-./archtorify.sh --help
-```
-
+![alt text](http://i.hizliresim.com/l33yVX.png)
 
 
 #### Note:
