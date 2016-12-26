@@ -1,4 +1,4 @@
-## Archtorify v1.6.3
+## Archtorify v1.6.4
 
 ### Transparent proxy through Tor for Arch Linux
 
@@ -46,8 +46,6 @@ systemctl --system daemon-reload
 ```bash
 ./archtorify.sh --help
 ```
-![alt text](http://i.hizliresim.com/bkk2Pd.png)
-
 
 #### 7 - Chmod and run program as a root 
 ```bash
@@ -55,7 +53,6 @@ chmod +x archtorify.sh
 
 ./archtorify --start
 ```
-![alt text](http://i.hizliresim.com/l33yVX.png)
 
 
 #### Note:

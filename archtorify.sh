@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.3
+# Version: 1.6.4
 # Operating System: Arch Linux
 # Description: Transparent proxy trough Tor 
 # Dependencies: tor, wget
@@ -26,7 +26,7 @@
 
 # program / version
 program="archtorify"
-version="1.6.3"
+version="1.6.4"
 
 # define colors
 export red=$'\e[0;91m'
@@ -122,7 +122,8 @@ function check_default {
 	VAR4=$?
 
 	if [ $VAR1 -ne 0 ] || [ $VAR2 -ne 0 ] || [ $VAR3 -ne 0 ] || [ $VAR4 -ne 0 ]; then
-		printf "\n${red}%s${endc}\n" "[ failed ] Please add this lines at /usr/lib/systemd/tor.service file:" >&2
+		printf "\n${red}%s${endc}\n" "[ failed ] Please add this lines at file: /usr/lib/systemd/system/tor.service" >&2
+		printf "${red}%s${endc}\n" "then restart daemon with: 'systemctl --system daemon-reload' command" >&2
 		printf "${green}%s${endc}\n" "You can read the file 'tor.service-example' for an example of configuration" >&2
 		printf "${white}%s${endc}\n" "[Service]"
 		printf "${white}%s${endc}\n" "User=root"
