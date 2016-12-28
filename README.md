@@ -1,4 +1,4 @@
-## Archtorify v1.6.4
+## Archtorify v1.6.5
 
 ### Transparent proxy through Tor for Arch Linux
 
@@ -33,7 +33,7 @@ chmod -R 755 /var/lib/tor
 ```
 User tor
 SocksPort 9050
-DNSPort 53
+DNSPort 5353
 TransPort 9040
 ````
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.4
+# Version: 1.6.5
 # Operating System: Arch Linux
 # Description: Transparent proxy trough Tor 
 # Dependencies: tor, wget
@@ -26,7 +26,7 @@
 
 # program / version
 program="archtorify"
-version="1.6.4"
+version="1.6.5"
 
 # define colors
 export red=$'\e[0;91m'
@@ -123,7 +123,6 @@ function check_default {
 
 	if [ $VAR1 -ne 0 ] || [ $VAR2 -ne 0 ] || [ $VAR3 -ne 0 ] || [ $VAR4 -ne 0 ]; then
 		printf "\n${red}%s${endc}\n" "[ failed ] Please add this lines at file: /usr/lib/systemd/system/tor.service" >&2
-		printf "${red}%s${endc}\n" "then restart daemon with: 'systemctl --system daemon-reload' command" >&2
 		printf "${green}%s${endc}\n" "You can read the file 'tor.service-example' for an example of configuration" >&2
 		printf "${white}%s${endc}\n" "[Service]"
 		printf "${white}%s${endc}\n" "User=root"
@@ -209,8 +208,9 @@ function start {
 	# write new iptables rules on file /etc/iptables/iptables.rules
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Set new iptables rules"
 
-	# NOTE --> add exception rules on iptables for allow 
-	# traffic on Virtualbox NAT Network '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN'
+	# NOTE --> add exception rules on iptables for allow traffic on Virtualbox NAT Network 
+	# '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN'
+	# '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j ACCEPT'
 	echo '*nat
 :PREROUTING ACCEPT [6:2126]
 :INPUT ACCEPT [0:0]
@@ -241,6 +241,7 @@ COMMIT
 --ipv6 -A INPUT -j REJECT
 --ipv4 -A OUTPUT -d 127.0.0.0/8 -j ACCEPT
 --ipv4 -A OUTPUT -d 192.168.0.0/16 -j ACCEPT
+--ipv4 -A OUTPUT -d 10.0.0.0/8 -j ACCEPT
 --ipv6 -A OUTPUT -d ::1/8 -j ACCEPT
 -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A OUTPUT -m owner --uid-owner "tor" -j ACCEPT
