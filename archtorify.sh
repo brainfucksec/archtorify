@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.6.5
+# Version: 1.7.0
 # Operating System: Arch Linux
 # Description: Transparent proxy trough Tor 
-# Dependencies: tor, wget
+# Dependencies: tor, curl
 # 
-# Copyright (C) 2015, 2016 Brainfuck 
+# Copyright (C) 2015, 2016, 2017 Brainfuck 
 
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -25,8 +25,8 @@
 
 
 # program / version
-program="archtorify"
-version="1.6.5"
+_PROGRAM="archtorify"
+_VERSION="1.7.0"
 
 # define colors
 export red=$'\e[0;91m'
@@ -49,31 +49,42 @@ printf "${white}
 *                                           *
 *********************************************
 
-Transparent proxy trough Tor for Arch Linux
+Transparent Proxy Trough Tor for Arch Linux OS
+----------------------------------------------
 
-Version: $version
+Version: $_VERSION
 Author: Brainfuck${endc}\n"
 }
 
 
 # check if the program run as a root
-function check_root {
+check_root () {
 	if [ "$(id -u)" -ne 0 ]; then
-		printf "\n${red}%s${endc}\n" "[ failed ] Please run this program as a root!" >&2
+		printf "\n${red}%s${endc}\n" "[ FAILED ] Please run this program as a root!" >&2
 		exit 1
 	fi
 }
 
 
-# functions for firewall ufw
-# check if ufw is installed and active, if not
-# jump this function
-function disable_ufw {
+# display Program and Tor version then exit
+print_version () {
+	printf "${white}%s${endc}\n" "$_PROGRAM version $_VERSION"
+	printf "${white}%s${endc}\n" "$(tor --version)"
+	exit 0
+}
+
+
+# Functions for firewall ufw
+# **************************
+# check ufw status: 
+# if installed and/or active disable it
+# if aren't installed, do nothing, don't display
+# nothing to user, simply jump to next function
+disable_ufw () {
 	if hash ufw 2>/dev/null; then
 		if ufw status | grep -q active$; then
 			printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Firewall ufw is active, disabling..."
-			ufw disable > /dev/null 2>&1
-			printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "ufw disabled"
+			ufw disable
 			sleep 3
 		else
 			ufw status | grep -q inactive$;
@@ -84,30 +95,31 @@ function disable_ufw {
 
 
 # enable ufw 
-# if ufw isn't installed, jump this function
-function enable_ufw {
+# if ufw isn't installed, do nothing and jump to
+# the next function
+enable_ufw () {
 	if hash ufw 2>/dev/null; then
 		if ufw status | grep -q inactive$; then
 			printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Enabling firewall ufw"
-			ufw enable > /dev/null 2>&1
-			printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "ufw enabled"
+			ufw enable
 			sleep 3
 		fi
 	fi
 }
 
 
-# check default configurations
-# check if archtorify is properly configured
-function check_default {
-	# check dependencies (tor, wget)
+# Check default configurations
+# ****************************
+# check if archtorify is properly configured, begin ...
+check_default () {
+	# check dependencies (tor, curl)
 	command -v tor > /dev/null 2>&1 ||
-	{ printf >&2 "\n${red}%s${endc}\n" "[ failed ] tor isn't installed, exiting..."; exit 1; }
+	{ printf >&2 "\n${red}%s${endc}\n" "[ FAILED ] tor isn't installed, exiting..."; exit 1; }
 
-	command -v wget > /dev/null 2>&1 ||
-	{ printf >&2 "\n${red}%s${endc}\n" "[ failed ] wget isn't installed, exiting..."; exit 1; }
+	command -v curl > /dev/null 2>&1 ||
+	{ printf >&2 "\n${red}%s${endc}\n" "[ FAILED ] curl isn't installed, exiting..."; exit 1; }
 
-	# check file /usr/lib/systemd/system/tor.service
+	# check file: "/usr/lib/systemd/system/tor.service"
 	# example config file: "archtorify/tor.service-example"
 	grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
 	VAR1=$?
@@ -122,29 +134,29 @@ function check_default {
 	VAR4=$?
 
 	if [ $VAR1 -ne 0 ] || [ $VAR2 -ne 0 ] || [ $VAR3 -ne 0 ] || [ $VAR4 -ne 0 ]; then
-		printf "\n${red}%s${endc}\n" "[ failed ] Please add this lines at file: /usr/lib/systemd/system/tor.service" >&2
-		printf "${green}%s${endc}\n" "You can read the file 'tor.service-example' for an example of configuration" >&2
+		printf "\n${red}%s${endc} ${white}%s${endc}\n" "[ FAILED ] Please add this lines at file:" "/usr/lib/systemd/system/tor.service" 
 		printf "${white}%s${endc}\n" "[Service]"
 		printf "${white}%s${endc}\n" "User=root"
 		printf "${white}%s${endc}\n" "Group=root"
-		printf "${white}%s${endc}\n" "Type=simple"
+		printf "${white}%s${endc}\n\n" "Type=simple"
+		printf "${green}%s${endc} ${white}%s${endc}\n" "You can copy configuration from:" "archtorify/tor.service-example"
 	exit 1
 	fi
 
-	# check owner and access rights of /var/lib/tor
+	# Check privilege of directory: "/var/lib/tor"
+	#
 	# ls -alh /var/lib/ | grep "tor"
-	# output: drwx------  tor tor
-	# (tor:tor chmod 755)
+	# correct permissions: drwx------  tor tor
 	if [ "$(stat -c '%U' /var/lib/tor)" != "tor" ] &&
 		[ "$(stat -c '%a' /var/lib/tor)" != "755" ]; then
-		printf "${red}%s${endc}\n" "[ failed ] Please give the right permissions and owner of /var/lib/tor folder"
+		printf "${red}%s${endc} ${white}%s${endc}\n" "[ FAILED ] Please give the right permissions and owner of directory:" "/var/lib/tor folder"
 		printf "${white}%s${endc}\n" "# chown -R tor:tor /var/lib/tor"
 		printf "${white}%s${endc}\n" "# chmod -R 755 /var/lib/tor"
 		printf "${white}%s${endc}\n" "# systemctl --system daemon-reload"
 	exit 1
 	fi
 
-	# check file '/etc/tor/torrc'
+	# Check file: "/etc/tor/torrc"
 	#
 	# User tor
 	# SocksPort 9050
@@ -163,7 +175,7 @@ function check_default {
 	VAR8=$?
 
 	if [ $VAR5 -ne 0 ] || [ $VAR6 -ne 0 ] || [ $VAR7 -ne 0 ] || [ $VAR8 -ne 0 ]; then
-		printf "${red}%s${endc}\n" "[ failed ] To enable the transparent proxy add the following at /etc/tor/torrc file:" >&2
+		printf "${red}%s${endc} ${white}%s${white}\n" "[ FAILED ] To enable the transparent proxy add the following at the end of file:" "/etc/tor/torrc" >&2
 		printf "${white}%s${endc}\n" "User tor"
 		printf "${white}%s${endc}\n" "SocksPort 9050"
 		printf "${white}%s${endc}\n" "DNSPort 53"
@@ -173,14 +185,14 @@ function check_default {
 }
 
 
-# start transparent proxy
-# start program
-function start {
+# Start transparent proxy
+# ***********************
+start_program () {
 	banner
 	check_root
 	check_default
 
-	# check status of tor.service and stop it if is active
+	# check status of tor.service and stop it if is active (for better security)
 	if systemctl is-active tor.service > /dev/null 2>&1; then
 		systemctl stop tor.service
 	fi
@@ -189,15 +201,19 @@ function start {
 	disable_ufw
 	sleep 3
 
+	# iptables settings:
+	# ******************
 	# save iptables rules
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Backup iptables rules"
-	iptables-save > /opt/iptables.backup
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Backup iptables rules... "
+	iptables-save > /opt/iptables.backup	
+	printf "${green}%s${endc}\n" "Done"
 	sleep 2
 
-	# flush current iptables
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Flush iptables rules"
+	# flush current iptables rules
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Flush iptables rules... "
 	iptables -F
 	iptables -t nat -F
+	printf "${green}%s${endc}\n" "Done"
 
 	# configure system's DNS resolver to use Tor's DNSPort on the loopback interface
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Configure system's DNS resolver to use Tor's DNSPort"
@@ -205,11 +221,10 @@ function start {
 	echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf
 	sleep 2
 
-	# write new iptables rules on file /etc/iptables/iptables.rules
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Set new iptables rules"
+	# write new iptables rules on file: "/etc/iptables/iptables.rules"
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Set new iptables rules... "
 
 	# NOTE --> add exception rules on iptables for allow traffic on Virtualbox NAT Network 
-	# '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN'
 	# '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j ACCEPT'
 	echo '*nat
 :PREROUTING ACCEPT [6:2126]
@@ -221,7 +236,6 @@ function start {
 -A PREROUTING ! -i lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 -A OUTPUT -o lo -j RETURN
 --ipv4 -A OUTPUT -d 192.168.0.0/16 -j RETURN
---ipv4 -A OUTPUT -d 10.0.0.0/8 -j RETURN
 -A OUTPUT -m owner --uid-owner "tor" -j RETURN
 -A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
 -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
@@ -248,147 +262,155 @@ COMMIT
 --ipv4 -A OUTPUT -j REJECT --reject-with icmp-port-unreachable
 --ipv6 -A OUTPUT -j REJECT
 COMMIT' >> /etc/iptables/iptables.rules
+# EOF
+printf "${green}%s${endc}\n" "Done"
 sleep 4
-
+	
 	# Tor Entry Guards
-	# delete file: /var/lib/tor/state
+	#
+	# delete file: "/var/lib/tor/state"
+	# little explained:
 	# when tor.service starting, a new file 'state' it's generated
-	# when you connect to Tor network, a new Tor entry guards will be written
-	# on this file.
-	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Get fresh Tor entry guards? [y/n]"
+	# when you connect to Tor network, a new Tor entry guards will be written on this file.
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Get fresh Tor entry guards? [Y/N]"
 	read -p "${green}:${endc} " yn
 	case $yn in
 		[yY]|[y|Y] )
 			rm -v /var/lib/tor/state
-			printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "When tor.service start, new Tor entry guards will obtained"
+			printf "${green}%s${endc} ${white}%s${endc}\n" "[ OK ]" "When tor.service start, new Tor entry guards will obtained"
 			;;
 		*)
 			;;
 	esac
 
 	# start tor.service
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Start Tor service"
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Start Tor service... "
 	systemctl start tor.service iptables
 	sleep 6			
-	printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active"
+	printf "${green}%s${endc} ${white}%s${endc}\n" "[ OK ]" "Tor service is active"
 
-	printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Transparent Proxy activated, your system is under Tor"
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "[ info ]" "use --status argument for check the program status"
+	printf "${green}%s${endc} ${white}%s${endc}\n" "[ OK ]" "Transparent Proxy activated, your system is under Tor"
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "[ info ]" "use '--status' argument for check the program status"
 }
 
 
-# stop function
-# stop transparent proxy and return to clearnet
-function stop {
+# Stop transparent proxy 
+# and return to clearnet
+# **********************
+stop () {
 	check_root
 
-	printf "${blue}%s${endc} ${green}%s${endc}\n"  "::" "Stopping Transparent Proxy"
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Stopping Transparent Proxy"
 	sleep 2
 
-	# flush iptables
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Flush iptables rules"
+	# flush current iptables rules
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Flush iptables rules... "
 	iptables -F
 	iptables -t nat -F
+	printf "${green}%s${endc}\n" "Done"
 
 	# restore iptables
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Restore the default iptables rules"
-	rm /etc/iptables/iptables.rules
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Restore the default iptables rules... "
+	#rm /etc/iptables/iptables.rules
 	iptables-restore < /opt/iptables.backup
+	printf "${green}%s${endc}\n" "Done"
+	sleep 3
 
 	# stop tor.service
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Stop Tor service"
+	printf "${blue}%s${endc} ${green}%s${endc}" "::" "Stop Tor service... "
 	systemctl stop tor.service
+	printf "${green}%s${endc}\n" "Done"
 	sleep 4
 
 	# restore /etc/resolv.conf --> default nameserver 
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Restore /etc/resolv.conf file with default DNS"
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Restore '/etc/resolv.conf' file with default DNS"
 	rm -v /etc/resolv.conf
 	cp -vf /opt/resolv.conf.backup /etc/resolv.conf
 	sleep 2
 
 	# enable firewall ufw 
 	enable_ufw
-	printf "${blue}%s${endc} ${white}%s${endc}\n" "[-]" "Transparent Proxy stopped"
+	printf "${green}%s${endc} ${white}%s${endc}\n" "[-]" "Transparent Proxy stopped"
+}
+
+
+# function for check public IP
+check_ip () {
+	printf "\n${blue}%s${endc} ${green}%s${endc}\n" "::" "Checking your public IP with curl, please wait..."
+	
+	local external_ip
+	external_ip="$(curl -s -m 15 ipinfo.io)"	
+	
+	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "IP Address Details:"
+	printf "${white}%s%s${endc}\n\n" "$external_ip" | tr -d '"'
 }
 
 
 # check_status function
+# *********************
 # function for check status of program and services:
-# tor.service, check public IP, netstat for open door
-function check_status {
+# check --> tor.service
+# check --> public IP
+# check --> dangerous open doors, execute --> netstat -tulpn
+check_status () {
 	check_root
 
 	# check status of tor.service
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Check current status of Tor service"
 	if systemctl is-active tor.service > /dev/null 2>&1; then
-		printf "${blue}%s${endc} ${white}%s${endc}\n" "[ ok ]" "Tor service is active"
+		printf "${green}%s${endc} ${white}%s${endc}\n" "[ OK ]" "Tor service is active"
 	else
-		printf "${red}%s${endc}\n" "[-] Tor service is not running!"
+		printf "${red}%s${endc}\n" "[-] Tor service is not running! exiting..."
 		exit 1
 	fi
 
 	# check current public IP
-	printf "\n${blue}%s${endc} ${green}%s${endc}\n" "::" "Checking your public IP, please wait..."
-	local ext_ip
-	ext_ip=$(wget -qO- -t 1 --timeout=15 ipinfo.io/ip)
-	local city
-	city=$(wget -qO- -t 1 --timeout=15 ipinfo.io/city)
-	
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Current public IP:"
-	printf "${white}%s%s${endc}\n\n" "$ext_ip - $city"
+	check_ip
 
-	# exec command "netstat -tulpn", check if there are open doors
+	# execute command "netstat -tulpn", check if there are dangerous open doors
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Check if there are open doors"
-	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "run command 'netstat -tulpn'"
+	printf "${blue}%s${endc} ${green}%s${endc} ${white}%s${endc}\n" "::" "run command: 'netstat -tulpn'"
 	sleep 5 &
-	netstat -tulpn
-	printf "\n${blue}%s${endc} ${green}%s${endc}\n" "[ info ]" "If your network security is ok, you have only 'tor' in listen"
+	netstat -tulpn | more
+	printf "${white}%s${endc} ${green}%s${endc}\n" "[ NOTE ]" "For better network security, you must have only 'tor' on state: LISTEN"
 	exit 0
 }
 
 
-# restart tor.service and change IP
-function restart {
+# restart tor.service 
+# and change IP
+# *******************
+restart () {
 	check_root
 	printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "Restart Tor service and change IP"
 
-	# systemctl restart or stop/start service is the same?
+	# systemctl stop/start service
 	systemctl stop tor.service iptables
 	sleep 3
 	systemctl start tor.service iptables
 	sleep 2
-	# check tor.service after restart
-	if systemctl is-active tor.service > /dev/null 2>&1; then
-		printf "${blue}%s${endc} ${white}%s${endc}\n\n" "[ ok ]" "Tor is active and your IP is changed"
-		# run check_status function
-		check_status
-	else
-		printf "${red}%s${endc}\n" "[-] Tor service is not running!"
-	fi
-	sleep 4
+	
+	printf "${green}%s${endc} ${white}%s${endc}\n" "[ OK ]" "Tor Exit Node changed"
+	
+	# check current public ip
+    check_ip
 }
 
 
-# display program and tor version then exit
-function print_version {
-	printf "${white}%s${endc}\n" "$program version $version"
-	printf "${white}%s${endc}\n" "$(tor --version)"
-	exit 0
-}
-
-
-# print nice help message and exit
-function help_menu {
+# print nice "nerd" help menu'
+help_menu () {
 	banner
+	
 	printf "\n${white}%s${endc}\n\n" "Usage:"
 	printf "${white}%s${endc} ${red}%s${endc} ${white}%s${endc} ${red}%s${endc}\n" "┌─╼" "$USER" "╺─╸" "$(hostname)"
-	printf "${white}%s${endc} ${green}%s${endc}\n" "└───╼" "./$program --argument"
+	printf "${white}%s${endc} ${green}%s${endc}\n" "└───╼" "./$_PROGRAM --argument"
 
-	printf "\n${white}%s${endc}\n\n" "Arguments:"
+	printf "\n${white}%s${endc}\n\n" "Arguments available:"
 	printf "${green}%s${endc}\n" "--help      show this help message and exit"
-	printf "${green}%s${endc}\n" "--start     start transparent proxy for tor"
+	printf "${green}%s${endc}\n" "--start     start transparent proxy through tor"
 	printf "${green}%s${endc}\n" "--stop      reset iptables and return to clear navigation"
 	printf "${green}%s${endc}\n" "--status    check status of program and services"
+	printf "${green}%s${endc}\n" "--checkip   check only public IP"
 	printf "${green}%s${endc}\n" "--restart   restart tor service and change IP"
 	printf "${green}%s${endc}\n" "--version   display program and tor version then exit"
 	exit 0
@@ -396,9 +418,10 @@ function help_menu {
 
 
 # cases user input
+# ****************
 case "$1" in
 	--start)
-		start
+		start_program
 		;;
 	--stop)
 		stop
@@ -408,6 +431,9 @@ case "$1" in
 		;;
 	--status)
 		check_status
+		;;
+	--checkip)
+		check_ip
 		;;
 	--version)
 		print_version
