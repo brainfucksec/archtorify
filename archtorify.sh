@@ -3,7 +3,7 @@
 # Program: archtorify.sh
 # Version: 1.8.0
 # Operating System: Arch Linux
-# Description: Transparent proxy trough Tor 
+# Description: Transparent proxy through Tor 
 # Dependencies: tor, curl
 # 
 # Copyright (C) 2015 Brainfuck 
