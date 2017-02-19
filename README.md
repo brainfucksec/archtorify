@@ -1,6 +1,6 @@
 ## Archtorify v1.8.0
 
-#### Archtorify is a program for simplify the configuration of transparent proxy trough Tor Network
+#### Archtorify is a program for simplify the configuration of transparent proxy through Tor Network
 
 
 
