@@ -83,13 +83,14 @@ check_required () {
 install_program () {
     printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Install archtorify..."
     # copy program files on /usr/share/
-    mkdir -pv /usr/share/archtorify
-    cp -Rf .git cfg README.md LICENSE /usr/share/archtorify
+    install -d -m644 "/usr/share/archtorify/cfg"
+    install -D -m644 "cfg/tor.service" "/usr/share/archtorify/cfg/tor.service"
+    install -D -m644 "cfg/torrc" "/usr/share/archtorify/cfg/torrc"
+    install -D -m644 "LICENSE" "/usr/share/archtorify/LICENSE"
+    install -D -m644 "README.md" "/usr/share/archtorify/README.md"
     
     # copy executable file on /usr/local/bin
-    cp -vf archtorify.sh /usr/local/bin/archtorify
-    sleep 1
-    chmod +x /usr/local/bin/archtorify
+    install -D -m755 "archtorify.sh" "/usr/local/bin/archtorify"
 
     # check if program run correctly
     if hash archtorify 2>/dev/null; then
