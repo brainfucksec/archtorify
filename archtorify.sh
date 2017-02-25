@@ -382,7 +382,7 @@ check_ip () {
     # print output
     printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "IP Address Details:"
     printf "${white}%s${endc}\n" "$external_ip" \
-        | tr -d '"' | tr -d '{}' | sed 's/ //g'
+        | tr -d '"' | tr -d '{}' | sed sed 's/  //g'
 }
 
 
