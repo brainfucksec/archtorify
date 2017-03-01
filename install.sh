@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # install.sh - archtorify installer
-# Copyright (C) 2015 Brainfuck
+# Copyright (C) 2015, 2017 Brainfuck
 #
-# This file is part of Archtorify
+# This file is part of archtorify
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 # program informations
 _PROGRAM="install.sh"
-_VERSION="0.1"
+_VERSION="0.2"
 _AUTHOR="Brainfuck"
 
 # define colors
@@ -59,38 +59,30 @@ check_root () {
 # check dependencies (tor, curl)
 check_required () {
     printf "\n${blue}%s${endc} ${green}%s${endc}\n" "==>" "Check dependencies"
-    printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Check tor"
-    if ! hash tor 2>/dev/null; then
-        printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Installing tor..."
-        pacman -S --noconfirm tor
-        printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" "tor installed"
-    else
-        printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" "tor already installed"
-    fi
-
-    printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Check curl"
-    if ! hash curl 2>/dev/null; then
-        printf "${blue}%s${endc} ${green}%s${endc}" "==>" "Installing curl..."
-        pacman -S --noconfirm curl
-        printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" "curl installed"
-    else
-        printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" "curl already installed"
-    fi
+    declare -a dependencies=("tor" "curl");
+    for package in "${dependencies[@]}"; do
+    	if ! hash "$package" 2>/dev/null; then
+        	printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Installing "$package" ..."
+        	pacman -S --noconfirm "$package"
+        	printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" installed"
+    	else
+        	printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" already installed"
+    	fi
+    done
 }
 
 
-# Set file and folders
+# Install program files
 install_program () {
     printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Install archtorify..."
-    # copy program files on /usr/share/
-    install -d -m644 "/usr/share/archtorify/cfg"
-    install -D -m644 "cfg/tor.service" "/usr/share/archtorify/cfg/tor.service"
-    install -D -m644 "cfg/torrc" "/usr/share/archtorify/cfg/torrc"
-    install -D -m644 "LICENSE" "/usr/share/archtorify/LICENSE"
-    install -D -m644 "README.md" "/usr/share/archtorify/README.md"
+
+    # copy files on /usr/share/
+    mkdir -p /usr/share/archtorify
+    install -Dm644 "LICENSE" "/usr/share/archtorify/LICENSE"
+    install -Dm644 "README.md" "/usr/share/archtorify/README.md"
     
     # copy executable file on /usr/local/bin
-    install -D -m755 "archtorify.sh" "/usr/local/bin/archtorify"
+    install -Dm755 "archtorify.sh" "/usr/local/bin/archtorify"
 
     # check if program run correctly
     if hash archtorify 2>/dev/null; then
