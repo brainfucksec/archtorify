@@ -1,15 +1,15 @@
-## Archtorify v1.8.0
+## Archtorify v1.8.1
 
-#### Archtorify is a program for simplify the configuration of transparent proxy through Tor Network
-
-
+### Archtorify is a program for simplify the configuration of transparent proxy through Tor Network
 
 
-#### Configuration
 
-##### Update system and run install.sh:
+
+### Configuration
+
+#### Update system and run install.sh:
 ```bash
-pacman -Syyu
+pacman -Syu
 cd archtorify/
 chmod +x install.sh
 ./install.sh
@@ -18,9 +18,9 @@ chmod +x install.sh
 
 
 
-#### Start Program
+### Start Program
 
-##### Use help argument or run the program without arguments for help menu':
+#### Use help argument or run the program without arguments for help menu':
 ```bash
 ./archtorify.sh --help
 ...
@@ -40,7 +40,7 @@ Arguments available:
 ```
 
 
-##### Start Transparent Proxy with --start argument
+#### Start Transparent Proxy with --start argument
 ```bash
 ./archtorify.sh --start
 ...
