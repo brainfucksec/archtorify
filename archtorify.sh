@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Program: archtorify.sh
-# Version: 1.8.0
+# Version: 1.8.1
 # Operating System: Arch Linux
 # Description: Transparent proxy through Tor 
 # Dependencies: tor, curl
 # 
-# Copyright (C) 2015 Brainfuck 
+# Copyright (C) 2015, 2017 Brainfuck 
 
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -26,7 +26,7 @@
 
 # program informations
 _PROGRAM="archtorify"
-_VERSION="1.8.0"
+_VERSION="1.8.1"
 _AUTHOR="Brainfuck"
 
 # define colors
@@ -186,7 +186,7 @@ WantedBy=multi-user.target' > /usr/lib/systemd/system/tor.service
     grep -q -x 'TransPort 9040' /etc/tor/torrc
     VAR8=$?
 
-    # if it if not already set, set it now
+    # if it is not already set, set it now
     if [ $VAR5 -ne 0 ] || [ $VAR6 -ne 0 ] || [ $VAR7 -ne 0 ] || [ $VAR8 -ne 0 ]; then
         printf "\n${blue}%s${endc} ${green}%s${endc}" "::" "Setting file: /etc/tor/torrc... "
         # backup original file
@@ -382,7 +382,7 @@ check_ip () {
     # print output
     printf "${blue}%s${endc} ${green}%s${endc}\n" "::" "IP Address Details:"
     printf "${white}%s${endc}\n" "$external_ip" \
-        | tr -d '"' | tr -d '{}' | sed sed 's/  //g'
+        | tr -d '"' | tr -d '{}' | sed 's/ //g'
 }
 
 
