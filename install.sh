@@ -21,7 +21,7 @@
 
 # program informations
 _PROGRAM="install.sh"
-_VERSION="0.2"
+_VERSION="0.2.1"
 _AUTHOR="Brainfuck"
 
 # define colors
@@ -56,42 +56,48 @@ check_root () {
 }
 
 
-# check dependencies (tor, curl)
+## Check dependencies
+# only tor is required, but use this function for future additions
 check_required () {
     printf "\n${blue}%s${endc} ${green}%s${endc}\n" "==>" "Check dependencies"
-    declare -a dependencies=("tor" "curl");
+    declare -a dependencies=("tor");
     for package in "${dependencies[@]}"; do
     	if ! hash "$package" 2>/dev/null; then
         	printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Installing "$package" ..."
         	pacman -S --noconfirm "$package"
         	printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" installed"
     	else
-        	printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" already installed"
+        	printf "${cyan}%s${endc} ${green}%s${endc}\n" \
+                "[ OK ]" ""$package" already installed"
     	fi
     done
 }
 
 
-# Install program files
+## Install program files
+# with 'install' command create directories and copy files
 install_program () {
     printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Install archtorify..."
 
-    # copy files on /usr/share/
-    mkdir -p /usr/share/archtorify
-    install -Dm644 "LICENSE" "/usr/share/archtorify/LICENSE"
-    install -Dm644 "README.md" "/usr/share/archtorify/README.md"
+    # copy files on /usr/share/*
+    install -Dm644 "LICENSE" "/usr/share/license/archtorify/LICENSE"
+    install -Dm644 "README.md" "/usr/share/doc/archtorify/README.md"
     
-    # copy executable file on /usr/local/bin
-    install -Dm755 "archtorify.sh" "/usr/local/bin/archtorify"
+    ## copy executable file on /usr/bin 
+    # NOTE: use /usr/bin instead usr/local/bin like Arch pkg standards
+    # https://wiki.archlinux.org/index.php/Arch_packaging_standards
+    install -Dm755 "archtorify.sh" "/usr/bin/archtorify"
 
     # check if program run correctly
     if hash archtorify 2>/dev/null; then
-        printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" "archtorify succesfully installed"
-        printf "${green}%s${endc}\n" "run command 'archtorify --start for start program"
+        printf "${cyan}%s${endc} ${green}%s${endc}\n" \
+            "[ OK ]" "archtorify succesfully installed"
+        printf "${green}%s${endc}\n" "run command 'archtorify --start' for start program"
     else
         printf "${red}%s${endc}\n" "[ FAILED ] archtorify cannot start :("
         printf "${green}%s${endc}\n" "If you are in trouble read NOTES on file README"
-        printf "${green}%s${endc}\n" "Report issues at: https://github.com/brainfucksec/archtorify/issues"
+        printf "${green}%s${endc}\n" \
+            "Report issues at: https://github.com/brainfucksec/archtorify/issues"
     fi
 }
 
