@@ -1,15 +1,28 @@
-## Archtorify v1.8.1
+## Archtorify v1.8.2
 
-### Archtorify is a program for simplify the configuration of transparent proxy through Tor Network
-
-
+### Program for simplify the configuration of transparent proxy through Tor Network
 
 
-### Configuration
 
-#### Update system and run install.sh:
+
+### Install
+
+
+#### Package: 
+
+AUR: [`archtorify-git`](https://aur.archlinux.org/packages/archtorify-git)
+
+
+#### Manual Installation:
+
+**First remove old files if you have:**
 ```bash
-pacman -Syu
+sudo -rmiv /usr/bin/archtorify /usr/share/doc/archtorify /usr/share/license/archtorify
+```
+
+**Then run install.sh:**
+```bash
+git clone https://github.com/BrainfuckSec/archtorify 
 cd archtorify/
 chmod +x install.sh
 ./install.sh
@@ -52,7 +65,7 @@ Arguments available:
 
 
 
-#### [ NOTES ]:
+#### [ NOTES ]
 
 ##### Please note that this program isn't a final solution for a setup of 100% anonimity, for more information about Tor configurations please read these docs:
 
