@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # install.sh - archtorify installer
-# Copyright (C) 2015, 2017 Brainfuck
+# Copyright (C) 2015-2017 Brainfuck
 #
 # This file is part of archtorify
 #
@@ -20,9 +20,9 @@
 
 
 # program informations
-_PROGRAM="install.sh"
-_VERSION="0.2.1"
-_AUTHOR="Brainfuck"
+PROGRAM="install.sh"
+VERSION="0.3.0"
+AUTHOR="Brainfuck"
 
 # define colors
 export red=$'\e[0;91m'
@@ -34,14 +34,14 @@ export endc=$'\e[0m'
 
 
 # banner
-banner () {
+banner() {
 printf "${red}
 ####################################
 #
-# :: "$_PROGRAM"
-# :: Version: "$_VERSION"
+# :: "$PROGRAM"
+# :: Version: "$VERSION"
 # :: Installer script for archtorify
-# :: Author: "$_AUTHOR"
+# :: Author: "$AUTHOR"
 # 
 ####################################${endc}\n\n"
 }
@@ -49,8 +49,8 @@ printf "${red}
 
 # check if the program run as a root
 check_root () {
-    if [ "$(id -u)" -ne 0 ]; then
-        printf "\n${red}%s${endc}\n" "[ FAILED ] Please run this program as a root!" >&2
+    if [[ "$(id -u)" -ne 0 ]]; then
+        printf "\n${red}%s${endc}\n" "[ FAILED ] Please run this program as a root!" 2>&-
         exit 1
     fi
 }
@@ -58,25 +58,27 @@ check_root () {
 
 ## Check dependencies
 # only tor is required, but use this function for future additions
-check_required () {
+check_required() {
     printf "\n${blue}%s${endc} ${green}%s${endc}\n" "==>" "Check dependencies"
+    
     declare -a dependencies=("tor");
+    
     for package in "${dependencies[@]}"; do
-    	if ! hash "$package" 2>/dev/null; then
-        	printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Installing "$package" ..."
-        	pacman -S --noconfirm "$package"
-        	printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" installed"
-    	else
-        	printf "${cyan}%s${endc} ${green}%s${endc}\n" \
+        if ! hash "$package" 2>/dev/null; then
+            printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Installing "$package" ..."
+            pacman -S --noconfirm "$package"
+            printf "${cyan}%s${endc} ${green}%s${endc}\n" "[ OK ]" ""$package" installed"
+        else
+            printf "${cyan}%s${endc} ${green}%s${endc}\n" \
                 "[ OK ]" ""$package" already installed"
-    	fi
+        fi
     done
 }
 
 
 ## Install program files
 # with 'install' command create directories and copy files
-install_program () {
+install_program() {
     printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Install archtorify..."
 
     # copy files on /usr/share/*
@@ -103,7 +105,7 @@ install_program () {
 
 
 # Main function
-main () {
+main() {
     banner
     check_root
     printf "${blue}%s${endc}" "==> " 
@@ -112,4 +114,4 @@ main () {
     install_program
 }
 
-main
+main "$@"
