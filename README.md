@@ -1,4 +1,4 @@
-## Archtorify v1.8.2
+## Archtorify v1.8.3
 
 ### Program for simplify the configuration of transparent proxy through Tor Network
 
@@ -97,4 +97,3 @@ https://wiki.archlinux.org/index.php/Tor
 **Network Configuration:** 
 
 https://wiki.archlinux.org/index.php/Network_configuration
-
