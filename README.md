@@ -17,7 +17,7 @@ AUR: [`archtorify-git`](https://aur.archlinux.org/packages/archtorify-git)
 
 **First remove old files if you have:**
 ```bash
-sudo -rmiv /usr/bin/archtorify /usr/share/doc/archtorify /usr/share/license/archtorify
+sudo -rmiv /usr/bin/archtorify /usr/share/doc/archtorify /usr/share/licenses/archtorify
 ```
 
 **Then run install.sh:**
@@ -35,7 +35,7 @@ chmod +x install.sh
 
 #### Use help argument or run the program without arguments for help menu':
 ```bash
-./archtorify.sh --help
+sudo archtorify --help
 ...
 
 └───╼ ./archtorify --argument
@@ -55,7 +55,7 @@ Arguments available:
 
 #### Start Transparent Proxy with --start argument
 ```bash
-./archtorify.sh --start
+sudo archtorify --start
 ...
 
 :: Starting Transparent Proxy
