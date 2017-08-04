@@ -82,7 +82,7 @@ install_program() {
     printf "${blue}%s${endc} ${green}%s${endc}\n" "==>" "Install archtorify..."
 
     # copy files on /usr/share/*
-    install -Dm644 "LICENSE" "/usr/share/license/archtorify/LICENSE"
+    install -Dm644 "LICENSE" "/usr/share/licenses/archtorify/LICENSE"
     install -Dm644 "README.md" "/usr/share/doc/archtorify/README.md"
     
     ## copy executable file on /usr/bin 
