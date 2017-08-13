@@ -1,31 +1,31 @@
-## Archtorify v1.8.3
+## Archtorify v1.9.0
 
 ### Program for simplify the configuration of transparent proxy through Tor Network
 
 
 
 
-### Install
+### Installation
 
+#### Install dependencies:
+```bash
+sudo pacman -Syu
 
-#### Package: 
+sudo pacman -S tor
+```
+
+#### Package:
 
 AUR: [`archtorify-git`](https://aur.archlinux.org/packages/archtorify-git)
 
 
-#### Manual Installation:
-
-**First remove old files if you have:**
+#### Manual installation:
 ```bash
-sudo -rmiv /usr/bin/archtorify /usr/share/doc/archtorify /usr/share/licenses/archtorify
-```
+git clone https://github.com/brainfucksec/archtorify
 
-**Then run install.sh:**
-```bash
-git clone https://github.com/BrainfuckSec/archtorify 
 cd archtorify/
-chmod +x install.sh
-./install.sh
+
+sudo make install
 ```
 
 
@@ -33,7 +33,7 @@ chmod +x install.sh
 
 ### Start Program
 
-#### Use help argument or run the program without arguments for help menu':
+#### Use --help argument for help menu':
 ```bash
 sudo archtorify --help
 ...
@@ -41,25 +41,20 @@ sudo archtorify --help
 └───╼ ./archtorify --argument
 
 Arguments available:
-
---help      show this help message and exit
---start     start transparent proxy for tor
---stop      reset iptables and return to clear navigation
---status    check status of program and services
---checkip   check only public IP
---restart   restart tor service and change IP
---version   display program and tor version then exit
-
+--------------------
+--help       show this help message and exit
+--start      start transparent proxy through tor
+--stop       reset iptables and return to clear navigation
+--status     check status of program and services
+--checkip    check only public IP
+--restart    restart tor service and change IP
+--version    display program and tor version then exit
 ```
 
 
-#### Start Transparent Proxy with --start argument
+#### Start Transparent Proxy with --start argument:
 ```bash
 sudo archtorify --start
-...
-
-:: Starting Transparent Proxy
-
 ```
 
 
@@ -67,33 +62,31 @@ sudo archtorify --start
 
 #### [ NOTES ]
 
-##### Please note that this program isn't a final solution for a setup of 100% anonimity, for more information about Tor configurations please read these docs:
+##### Please note that this program is not a final solution for a setup of anonimity at 100%, for more information about Tor configurations please read these docs:
 
-**Tor Project wiki about Transparent Proxy:** 
+**Tor Project wiki about Transparent Proxy:**
 
 https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 
 
-**Whonix Do Not recommendations:** 
+**Tor General FAQ**
+
+https://www.torproject.org/docs/faq.html.en
+
+
+**Whonix Do Not recommendations:**
 
 https://www.whonix.org/wiki/DoNot
 
 
-**Whonix wiki about Tor Entry Guards:**
-
-https://www.whonix.org/wiki/<Tor id="Non-Persistent_Entry_Guards"></Tor>
-
-https://forums.whonix.org/t/persistent-tor-entry-guard-relays-can-make-you-trackable-across-different-physical-locations/2090
 
 
+##### Configuration of transparent proxy on Arch Linux depends on your network configuration, this program not work if you have installed 'openresolv' or 'netctl' installed (because this programs overwrite the resolv.conf file), please read these docs from Arch Linux wiki:
 
-
-##### Configuration of transparent proxy on Arch Linux depends on your network configuration, please read these docs from Arch Linux wiki: 
-
-**Tor:** 
+**Tor:**
 
 https://wiki.archlinux.org/index.php/Tor
 
-**Network Configuration:** 
+**Network Configuration:**
 
 https://wiki.archlinux.org/index.php/Network_configuration
