@@ -81,7 +81,7 @@ https://www.whonix.org/wiki/DoNot
 
 
 
-##### Configuration of transparent proxy on Arch Linux depends on your network configuration, this program not work if you have installed 'openresolv' or 'netctl' installed (because this programs overwrite the resolv.conf file), please read these docs from Arch Linux wiki:
+##### Configuration of transparent proxy on Arch Linux depends on your network configuration, this program not work if you have installed 'openresolv' or 'netctl' (because this programs overwrite the resolv.conf file), please read these docs from Arch Linux wiki:
 
 **Tor:**
 
