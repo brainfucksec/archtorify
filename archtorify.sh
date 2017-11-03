@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Program: archtorify.sh
-# Version: 1.10.0
+# Version: 1.10.1
 # Operating System: Arch Linux
 # Description: Transparent proxy through Tor
 #
@@ -25,7 +25,7 @@
 
 # Program's informations
 readonly program="archtorify"
-readonly version="1.10.0"
+readonly version="1.10.1"
 readonly author="Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -493,16 +493,16 @@ case "$1" in
         ;;
     --)
         printf "${red}%s${endc}\\n" "[ failed ] '$1' it requires an argument!" >&2
-        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        printf "${white}%s${endc}\\n" "use '$program --help' for more informations"
         exit 1
         ;;
     --*)
         printf "${red}%s${endc}\\n" "[ failed ] Invalid option '$1' !" >&2
-        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        printf "${white}%s${endc}\\n" "use '$program --help' for more informations"
         exit 1
         ;;
     *)
         printf "${red}%s${endc}\\n" "[ failed ] Invalid option '$1' !" >&2
-        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        printf "${white}%s${endc}\\n" "use '$program --help' for more informations"
         exit 1
 esac
