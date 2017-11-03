@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 # Program: archtorify.sh
-# Version: 1.9.0
+# Version: 1.10.0
 # Operating System: Arch Linux
 # Description: Transparent proxy through Tor
-# Dependencies: tor
 #
 # Copyright (C) 2015-2017 Brainfuck
 
@@ -26,11 +25,11 @@
 
 # Program's informations
 readonly program="archtorify"
-readonly version="1.9.0"
+readonly version="1.10.0"
 readonly author="Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
-# define colors
+# Define colors for terminal output
 export red=$'\e[0;91m'
 export green=$'\e[0;92m'
 export blue=$'\e[0;94m'
@@ -38,11 +37,15 @@ export white=$'\e[0;97m'
 export cyan=$'\e[0;96m'
 export endc=$'\e[0m'
 
-# Directory where put backups of system default files
+## Directories
+# Set program's directories and files
+# backup files: /opt/archtorify/backups
+# configuration files: /opt/archtorify/cfg
 readonly backup_dir="/opt/archtorify/backups"
+readonly config_dir="/opt/archtorify/cfg"
 
 
-# banner
+# Show program banner
 banner() {
 printf "${white}
 *********************************************
@@ -79,9 +82,9 @@ print_version() {
 }
 
 
-## Functions for firewall ufw
+## Functions for firewall ufw (launched only if ufw exist)
 # check ufw status:
-# if installed and/or active disable it, if aren't installed, do nothing,
+# if installed and/or active disable it, if isn't installed, do nothing,
 # don't display nothing to user, simply jump to next function
 disable_ufw() {
     if hash ufw 2>/dev/null; then
@@ -99,8 +102,8 @@ disable_ufw() {
 }
 
 
-# enable ufw
-# if ufw isn't installed, do nothing and jump to the next function
+## enable ufw
+# often, if ufw isn't installed, do nothing and jump to the next function
 enable_ufw() {
     if hash ufw 2>/dev/null; then
         if ufw status | grep -q inactive$; then
@@ -126,6 +129,21 @@ check_defaults() {
         fi
     done
 
+    ## Check if program's directories exist
+    # backup dir: /opt/archtorify/backups
+    # config dir: /opt/archtorify/cfg
+    if [ ! -d "$backup_dir" ]; then
+        printf "${red}%s${endc}\\n" \
+            "[ failed ] '$backup_dir' not exist, run makefile first!";
+        exit 1
+    fi
+
+    if [ ! -d "$config_dir" ]; then
+        printf "${red}%s${endc}\\n" \
+            "[ failed ] '$config_dir' not exist, run makefile first!";
+        exit 1
+    fi
+
     ## Check file: "/usr/lib/systemd/system/tor.service"
     # ref: https://wiki.archlinux.org/index.php/tor#Transparent_Torification
     grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
@@ -140,39 +158,28 @@ check_defaults() {
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
     VAR4=$?
 
-    # if it is not already set, set it now
+    # if this file is not configured, configure it now
     if [[ $VAR1 -ne 0 ]] || [[ $VAR2 -ne 0 ]] || [[ $VAR3 -ne 0 ]] || [[ $VAR4 -ne 0 ]]; then
         printf "\n${blue}%s${endc} ${green}%s${endc}\\n" \
             "::" "Setting file: /usr/lib/systemd/system/tor.service"
 
-        # backup original file
-        cp -vf /usr/lib/systemd/system/tor.service "$backup_dir/tor.service.backup"
+        # backup original 'tor.service' file to the backup directory
+        if ! cp -vf /usr/lib/systemd/system/tor.service "$backup_dir/tor.service.backup"; then
+            printf "${red}%s\\n %s${endc}\\n" \
+                "[ failed ] can't copy original 'tor.service' file to the backup directory."
+            exit 1
+        fi
 
-        # write new settings to file
-#---------------------------------------
-        echo '[Unit]
-Description=Anonymizing Overlay Network
-After=network.target
-
-[Service]
-User=root
-Group=root
-Type=simple
-ExecStart=/usr/bin/tor -f /etc/tor/torrc
-ExecReload=/usr/bin/kill -HUP $MAINPID
-KillSignal=SIGINT
-LimitNOFILE=8192
-PrivateDevices=yes
-
-[Install]
-WantedBy=multi-user.target' > /usr/lib/systemd/system/tor.service
-#---------------------------------------
-# EOF
+        # copy new 'tor.service' file with new settings
+        if ! cp -vf "$config_dir/tor.service" /usr/lib/systemd/system/tor.service; then
+            printf "${red}%s${endc}\\n" \
+                "[ failed ] can't set '/usr/lib/systemd/system/tor.service'"
+            exit 1
+        fi
     fi
 
     ## Check permissions of directory: "/var/lib/tor"
     # correct: drwx------  tor tor
-    # if the file is not set, exec commands and set it now
     if [[ "$(stat -c '%U' /var/lib/tor)" != "tor" ]] &&
         [[ "$(stat -c '%a' /var/lib/tor)" != "755" ]]; then
         printf "${blue}%s${endc} ${green}%s${endc}\\n" \
@@ -201,40 +208,23 @@ WantedBy=multi-user.target' > /usr/lib/systemd/system/tor.service
     grep -q -x 'TransPort 9040' /etc/tor/torrc
     VAR8=$?
 
-    # if it is not already set, set it now
+    # if this file is not configured, configure it now
     if [ $VAR5 -ne 0 ] || [ $VAR6 -ne 0 ] || [ $VAR7 -ne 0 ] || [ $VAR8 -ne 0 ]; then
         printf "\n${blue}%s${endc} ${green}%s${endc}\n" "::" "Setting file: /etc/tor/torrc"
 
-        # backup original file
-        cp -vf /etc/tor/torrc "$backup_dir/torrc.backup"
+        # backup original tor 'torrc' file to the backup directory
+        if ! cp -vf /etc/tor/torrc "$backup_dir/torrc.backup"; then
+            printf "${red}%s${endc}\\n" \
+                "[ failed ] can't copy original tor 'torrc' file to the backup directory"
+            exit 1
+        fi
 
-        # write new settings to file:
-#-----------------------------------------------------------------------
-        echo '## Configuration file for Tor
-##
-## See "man tor", or https://www.torproject.org/docs/tor-manual.html,
-## for more options you can use in this file.
-##
-## Tor will look for this file in various places based on your platform:
-## https://www.torproject.org/docs/faq#torrc
-
-## Logs to /tmp to prevent digital evidence to be stored on disk
-Log notice file /tmp/archtorify.log
-
-## The directory for keeping all the keys/etc. By default, we store
-## things in $HOME/.tor on Unix, and in Application Data\tor on Windows.
-DataDirectory /var/lib/tor
-
-## Still if you cannot start the tor service, run the service using root
-## (this will switch back to the tor user).
-User tor
-
-## Transparent Proxy settings
-SocksPort 9050
-DNSPort 53
-TransPort 9040' > /etc/tor/torrc
-#-----------------------------------------------------------------------
-# EOF
+        # copy new 'torrc' filw with settings for archtorify
+        if ! cp -vf "$config_dir/torrc" /etc/tor/torrc; then
+            printf "${red}%s${endc}\\n" \
+                "[ failed ] can't set '/etc/tor/torrc'"
+            exit 1
+        fi
     fi
 }
 
@@ -250,14 +240,20 @@ main() {
         systemctl stop tor.service
     fi
 
-    printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" "::" "Starting Transparent Proxy"
+    printf "\\n${cyan}%s${endc} ${green}%s${endc}\\n" "==>" "Starting Transparent Proxy"
     disable_ufw
     sleep 3
 
     ## Begin iptables settings:
     # save current iptables rules
     printf "${blue}%s${endc} ${green}%s${endc}" "::" "Backup iptables rules... "
-    iptables-save > /opt/iptables.backup
+
+    if ! iptables-save > "$backup_dir/iptables.backup"; then
+        printf "${red}%s${endc}\\n" \
+            "[ failed ] can't copy iptables rules to backup directory"
+        exit 1
+    fi
+
     printf "${white}%s${endc}\\n" "Done"
     sleep 2
 
@@ -271,54 +267,26 @@ main() {
     # i.e. write nameserver 127.0.0.1 to 'etc/resolv.conf' file
     printf "${blue}%s${endc} ${green}%s${endc}\\n" \
         "::" "Configure system's DNS resolver to use Tor's DNSPort"
-    cp -vf /etc/resolv.conf "$backup_dir/resolv.conf.backup"
-    echo -e 'nameserver 127.0.0.1' > /etc/resolv.conf
+
+    if ! cp -vf /etc/resolv.conf "$backup_dir/resolv.conf.backup"; then
+        printf "${red}%s${endc}\\n" \
+            "[ failed ] can't copy resolv.conf to the backup directory"
+        exit 1
+    fi
+
+    printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
     sleep 2
 
     # write new iptables rules on file: "/etc/iptables/iptables.rules"
     # NOTE --> added exception rules on iptables for allow traffic on Virtualbox NAT Network
     # '--ipv4 -A OUTPUT -d 10.0.0.0/8 -j ACCEPT'
-    printf "${blue}%s${endc} ${green}%s${endc}" "::" "Set new iptables rules... "
-#-----------------------------------------------------------------------------------------
-    echo '*nat
-:PREROUTING ACCEPT [6:2126]
-:INPUT ACCEPT [0:0]
-:OUTPUT ACCEPT [17:6239]
-:POSTROUTING ACCEPT [6:408]
+    printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "Set new iptables rules... "
 
--A PREROUTING ! -i lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
--A PREROUTING ! -i lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
--A OUTPUT -o lo -j RETURN
---ipv4 -A OUTPUT -d 192.168.0.0/16 -j RETURN
--A OUTPUT -m owner --uid-owner "tor" -j RETURN
--A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
--A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
-COMMIT
-
-*filter
-:INPUT DROP [0:0]
-:FORWARD DROP [0:0]
-:OUTPUT DROP [0:0]
-
--A INPUT -i lo -j ACCEPT
--A INPUT -p icmp -j ACCEPT
--A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
---ipv4 -A INPUT -p tcp -j REJECT --reject-with tcp-reset
---ipv4 -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
---ipv4 -A INPUT -j REJECT --reject-with icmp-proto-unreachable
---ipv6 -A INPUT -j REJECT
---ipv4 -A OUTPUT -d 127.0.0.0/8 -j ACCEPT
---ipv4 -A OUTPUT -d 192.168.0.0/16 -j ACCEPT
---ipv4 -A OUTPUT -d 10.0.0.0/8 -j ACCEPT
---ipv6 -A OUTPUT -d ::1/8 -j ACCEPT
--A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
--A OUTPUT -m owner --uid-owner "tor" -j ACCEPT
---ipv4 -A OUTPUT -j REJECT --reject-with icmp-port-unreachable
---ipv6 -A OUTPUT -j REJECT
-COMMIT' >> /etc/iptables/iptables.rules
-#-----------------------------------------------------------------------------------------
-# EOF
-    printf "${white}%s${endc}\n" "Done"
+    if ! cp -vf "$config_dir/iptables.rules" /etc/iptables/iptables.rules; then
+        printf "${red}%s${endc}\\n" \
+            "[ failed ] can't set '/etc/iptables/iptables.rules'"
+        exit 1
+    fi
     sleep 4
 
     # start tor.service
@@ -341,7 +309,7 @@ COMMIT' >> /etc/iptables/iptables.rules
 ## Stop transparent proxy
 stop() {
     check_root
-    printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "Stopping Transparent Proxy"
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" "==>" "Stopping Transparent Proxy"
     sleep 2
 
     ## Resets default settings
@@ -352,10 +320,12 @@ stop() {
     printf "${white}%s${endc}\\n" "Done"
 
     # restore iptables
-    printf "${blue}%s${endc} ${green}%s${endc}" "::" "Restore the default iptables rules... "
-    iptables-restore < /opt/iptables.backup
-    printf "${white}%s${endc}\\n" "Done"
-    sleep 3
+    printf "${blue}%s${endc} ${green}%s${endc}\\n" \
+        "::" "Restore the default iptables rules... "
+
+    rm -v /etc/iptables/iptables.rules
+    iptables-restore < "$backup_dir/iptables.backup"
+    sleep 2
 
     # stop tor.service
     printf "${blue}%s${endc} ${green}%s${endc}" "::" "Stop Tor service... "
@@ -370,16 +340,25 @@ stop() {
     cp -vf "$backup_dir/resolv.conf.backup" /etc/resolv.conf
     sleep 2
 
+    # restore default 'torrc' file
+    printf "${blue}%s${endc} ${green}%s${endc}\\n" \
+        "::" "Restore '/etc/tor/torrc' file with default tor settings"
+    cp -vf "$config_dir/torrc.default" /etc/tor/torrc
+    sleep 1
+
     # enable firewall ufw
     enable_ufw
-    printf "${cyan}%s${endc} ${green}%s${endc}\\n" "[-]" "Transparent Proxy stopped"
+
+    ## End
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" \
+        "[-]" "Transparent Proxy stopped"
 }
 
 
 ## Function for check public IP
 check_ip() {
-    printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" \
-        "::" "Checking your public IP, please wait..."
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" \
+        "==>" "Checking your public IP, please wait..."
 
     # curl request: http://ipinfo.io/geo
     if ! external_ip="$(curl -s -m 10 ipinfo.io/geo)"; then
@@ -389,25 +368,46 @@ check_ip() {
 
     # print output
     printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "IP Address Details:"
-    printf "${white}%s${endc}\\n" "$external_ip" | tr -d '"{}' | sed 's/ //g'
+    printf "${white}%s${endc}" "$external_ip" | tr -d '"{}' | sed 's/ //g'
 }
 
 
 ## Check_status function
 # function for check status of program and services:
 # check --> tor.service
+# check --> tor settings
 # check --> public IP
-# TODO: check if public IP is Tor exit node (not for security reason but only
-# for inform the users :)
 check_status () {
     check_root
 
     # check status of tor.service
-    printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "Check current status of Tor service"
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" \
+        "==>" "Check current status of Tor service"
+
     if systemctl is-active tor.service > /dev/null 2>&1; then
-        printf "${cyan}%s${endc} ${green}%s${endc}\\n" "[ ok ]" "Tor service is active"
+        printf "${cyan}%s${endc} ${green}%s${endc}\\n\\n" \
+            "[ ok ]" "Tor service is active"
     else
-        printf "${red}%s${endc}\n" "[-] Tor service is not running! exiting..."
+        printf "${red}%s${endc}\\n" "[-] Tor service is not running! exiting..."
+        exit 1
+    fi
+
+    # check tor network settings
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" \
+        "==>" "Check Tor network settings"
+
+    local host_port="localhost:9050"
+    local url="https://check.torproject.org/"
+
+    # curl: '-L' and 'tac' for avoid error: (23) Failed writing body
+    # https://github.com/kubernetes/helm/issues/2802
+    # https://stackoverflow.com/questions/16703647/why-curl-return-and-error-23-failed-writing-body
+    if curl --socks5 "$host_port" --socks5-hostname "$host_port" -sL "$url" \
+        | cat | tac | grep -q 'Congratulations'; then
+        printf "${cyan}%s${endc} ${green}%s${endc}\\n\\n" \
+            "[ ok ]" "Your system is configured to use Tor"
+    else
+        printf "${red}%s${endc}\\n\\n" "Your system is not using Tor"
         exit 1
     fi
 
@@ -421,45 +421,53 @@ check_status () {
 restart() {
     check_root
 
-    printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "Restart Tor service and change IP"
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n" \
+        "==>" "Restart Tor service and change IP"
     # systemctl stop/start service
     systemctl stop tor.service iptables
     sleep 3
     systemctl start tor.service iptables
     sleep 2
 
-    printf "${cyan}%s${endc} ${green}%s${endc}\\n" "[ ok ]" "Tor Exit Node changed"
+    printf "${cyan}%s${endc} ${green}%s${endc}\\n\\n" "[ ok ]" "Tor Exit Node changed"
 
     # check current public ip
     check_ip
 }
 
 
-# print nice "nerd" help menu'
-help_menu() {
-    banner
+# print nice "nerd style" help menù
+usage() {
+    printf "${green}%s${endc}\\n" "$program $version"
+    printf "${green}%s${endc}\\n\\n" "Transparent proxy through Tor for Arch Linux"
 
-    printf "\\n\\n${green}%s${endc}\\n" "Usage:"
-    printf "${white}%s${endc}\n\n"   "------"
+    printf "${green}%s${endc}\\n\\n" "Usage:"
+
     printf "${white}%s${endc} ${red}%s${endc} ${white}%s${endc} ${red}%s${endc}\\n" \
         "┌─╼" "$USER" "╺─╸" "$(hostname)"
-    printf "${white}%s${endc} ${green}%s${endc}\\n" "└───╼" "./$program --argument"
+    printf "${white}%s${endc} ${green}%s${endc}\\n\\n" "└───╼" "./$program [option]"
 
-    printf "\\n${green}%s${endc}\\n" "Arguments available:"
-    printf "${white}%s${endc}\\n\\n" "--------------------"
+    printf "${green}%s${endc}\\n\\n" "Options:"
 
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--help"      "show this help message and exit"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--start"     "start transparent proxy through tor"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--stop"      "reset iptables and return to clear navigation"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--status"    "check status of program and services"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--checkip"   "check only public IP"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--restart"   "restart tor service and change IP"
-    printf "${white}%-12s${endc} ${green}%s${endc}\\n" "--version"   "display program and tor version then exit"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--help"      "show this help message and exit"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--start"     "start transparent proxy through tor"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--stop"      "reset iptables and return to clear navigation"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--status"    "check status of program and services"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--checkip"   "check only public IP"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--restart"   "restart tor service and change IP"
+    printf "${white}%-12s${endc} ${green}%s${endc}\\n" \
+        "--version"   "display program and tor version then exit"
     exit 0
 }
 
 
-## cases user input
+## Cases user input
 case "$1" in
     --start)
         main
@@ -480,10 +488,21 @@ case "$1" in
         print_version
         ;;
     --help)
-        help_menu
+        usage
+        exit 0
+        ;;
+    --)
+        printf "${red}%s${endc}\\n" "[ failed ] '$1' it requires an argument!" >&2
+        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        exit 1
+        ;;
+    --*)
+        printf "${red}%s${endc}\\n" "[ failed ] Invalid option '$1' !" >&2
+        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        exit 1
         ;;
     *)
-help_menu
-exit 1
-
+        printf "${red}%s${endc}\\n" "[ failed ] Invalid option '$1' !" >&2
+        printf "${white}%s${endc}\\n" "use $program --help for more informations"
+        exit 1
 esac
