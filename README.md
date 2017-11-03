@@ -40,16 +40,16 @@ sudo archtorify --start
 
 #### Please note that this program is not a final solution for a setup of anonimity at 100%, for more information about Tor configurations please read these docs:
 
-#### Tor Project wiki about Transparent Proxy:**
+#### Tor Project wiki about Transparent Proxy:
 
 https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 
-#### Tor General FAQ**
+#### Tor General FAQ
 
 https://www.torproject.org/docs/faq.html.en
 
 
-#### Whonix Do Not recommendations:**
+#### Whonix Do Not recommendations:
 
 https://www.whonix.org/wiki/DoNot
 
