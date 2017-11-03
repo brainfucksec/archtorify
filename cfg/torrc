@@ -1,0 +1,37 @@
+## Configuration file for a typical Tor user
+## Last updated 22 April 2012 for Tor 0.2.3.14-alpha.
+## (may or may not work for much older or much newer versions of Tor.)
+##
+## Lines that begin with "## " try to explain what's going on. Lines
+## that begin with just "#" are disabled commands: you can enable them
+## by removing the "#" symbol.
+##
+## See 'man tor', or https://www.torproject.org/docs/tor-manual.html,
+## for more options you can use in this file.
+##
+## Tor will look for this file in various places based on your platform:
+## https://www.torproject.org/docs/faq#torrc
+
+## This file is modified by archtorify: https://github.com/brainfucksec/archtorify
+## original '/etc/tor/torrc' file are copied to backup directory:
+## '/opt/kalitorify/backups/torrc.backup'
+
+## Logs go to stdout at level "notice" unless redirected by something
+## else, like one of the below lines. You can have as many Log lines as
+## you want.
+##
+## We advise using "notice" in most cases, since anything more verbose
+## may provide sensitive information to an attacker who obtains the logs.
+##
+## Logs to /tmp to prevent digital evidence to be stored on disk
+Log notice file /tmp/archtorify.log
+
+## The directory for keeping all the keys/etc. By default, we store
+## things in $HOME/.tor on Unix, and in Application Data\tor on Windows.
+DataDirectory /var/lib/tor
+
+## Transparent Proxy settings
+User tor
+SocksPort 9050
+DNSPort 53
+TransPort 9040
