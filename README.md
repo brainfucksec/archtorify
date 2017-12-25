@@ -1,9 +1,15 @@
-# Archtorify v1.10.1
+# Archtorify v1.11.0
 
 ## Transparent proxy through Tor for Arch Linux
 
 
 ## Installation
+
+Note: From this version the program directories are changed, if previous version is installed, remove this first:
+```bash
+sudo pacman -R archtorify-git
+```
+
 
 #### Install dependencies:
 ```bash
