@@ -1,10 +1,10 @@
 PROGRAM_NAME=archtorify
-VERSION=1.11.0
+VERSION=1.12.0
 
+DATA_DIR=/usr/share
 LICENSE_DIR=$(DATA_DIR)/licenses
 DOCS_DIR=$(DATA_DIR)/doc
 PROGRAM_DIR=/usr/bin
-DATA_DIR=/usr/share
 BACKUP_DIR=/opt
 
 install:
