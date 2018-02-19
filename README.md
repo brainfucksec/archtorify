@@ -12,7 +12,7 @@ In the [Tor project wiki](https://trac.torproject.org/projects/tor/wiki/doc/Tran
 
 ## Recommendations
 
-archtorify is produced independently from the Tor anonimity software and carries no guarantee from the Tor Project about quality, suitability or anithing else, if you need more information about tor security plese read these docs:
+archtorify is produced independently from the Tor anonimity software and carries no guarantee from the Tor Project about quality, suitability or anything else, if you need more information about tor security plese read these docs:
 
 [Tor General FAQ](https://www.torproject.org/docs/faq.html.en)
 
