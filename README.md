@@ -22,11 +22,6 @@ Arch Linux is a user-centric distribution, for this, configuration of transparen
 
 ## Install
 
-#### Note: From version '1.10.1' the program directories are changed, if previous version is installed, remove this first:
-```bash
-sudo pacman -R archtorify-git
-```
-
 #### Install dependencies:
 ```bash
 sudo pacman -Syu
@@ -45,6 +40,8 @@ git clone https://github.com/brainfucksec/archtorify
 cd archtorify/
 
 sudo make install
+
+sudo reboot
 ```
 
 ## Usage
