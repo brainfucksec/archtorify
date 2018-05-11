@@ -1,4 +1,15 @@
 /** 1.12.0 / 19 February 2018 **/
 
-Added exception for "resolvconf" package
-Deleted unnecessary "sleep" statements
+Added exception for resolvconf package
+Deleted unnecessary sleep statements
+
+
+/** 1.13.0 / 11 May 2018 **/
+
+Added call to check_status() function in main() function
+Little fixes in restart() function
+Improve output messages
+Modified file data/torrc
+Update file /data/torrc.default
+Little fixes in printf functions
+
