@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-# Program: archtorify.sh
-# Version: 1.13.0
-# Operating System: Arch Linux
-# Description: Transparent proxy through Tor
+# archtorify.sh
+#
+# Transparent proxy through Tor
 #
 # Copyright (C) 2015-2018 Brainfuck
 
@@ -23,9 +22,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Program's information
-readonly program="archtorify"
-readonly version="1.13.0"
+# Program information
+readonly prog_name="archtorify"
+readonly version="1.14.0"
 readonly author="Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -42,6 +41,9 @@ export endc=$'\e[0m'
 # backup files: /opt/archtorify/backups
 readonly config_dir="/usr/share/archtorify/data"
 readonly backup_dir="/opt/archtorify/backups"
+
+# url for bug reports :)
+report_url="https://github.com/brainfucksec/archtorify/issues"
 
 
 # Show program banner
@@ -77,7 +79,7 @@ check_root() {
 # Display program and Tor version
 #################################
 print_version() {
-    printf "${white}%s${endc}\\n" "$program version $version"
+    printf "${white}%s${endc}\\n" "$prog_name version $version"
     printf "${white}%s${endc}\\n" "$(tor --version)"
     exit 0
 }
@@ -119,33 +121,55 @@ enable_ufw() {
 }
 
 
+# Setup program files
+#####################
+replace_file() {
+    local source_file="$1"
+    local dest_file="$2"
+
+    # Backup original file in the backup directory
+    if ! cp -vf "$1" "$backup_dir/$2.backup"; then
+        printf "\\n${red}%s${endc}\\n" \
+            "[ failed ] can't copy original '$1' file in the backup directory."
+
+        printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
+        exit 1
+    fi
+
+    # Copy new file with new settings
+    if ! cp -vf "$config_dir/$2" "$1"; then
+        printf "\\n${red}%s${endc}\\n" \
+               "[ failed ] can't set '$1'"
+
+        printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
+        exit 1
+    fi
+}
+
+
 # Check default settings:
 #########################
 check_defaults() {
     local report_url="https://github.com/brainfucksec/archtorify/issues"
 
     # Check dependencies (tor)
-    declare -a dependencies=("tor");
-
-    for package in "${dependencies[@]}"; do
-        if ! hash "$package" 2>/dev/null; then
-            printf "\\n${red}%s${endc}\\n" \
-                   "[ failed ] '$package' isn't installed, exit";
-            exit 1
-        fi
-    done
+    if ! hash tor 2>/dev/null; then
+        printf "\\n${red}%s${endc}\\n" \
+               "[ failed ] '$package' isn't installed, exit"
+        exit 1
+    fi
 
     # Check if program's directories exist
     # bash `-d`: test if the given directory exists or not.
     if [ ! -d "$backup_dir" ]; then
         printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] directory '$backup_dir' not exist, run makefile first!";
+               "[ failed ] directory '$backup_dir' not exist, run makefile first!"
         exit 1
     fi
 
     if [ ! -d "$config_dir" ]; then
         printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] directory '$config_dir' not exist, run makefile first!";
+               "[ failed ] directory '$config_dir' not exist, run makefile first!"
         exit 1
     fi
 
@@ -164,28 +188,13 @@ check_defaults() {
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
     VAR4=$?
 
-    # If this file isn't already configured, configure it now
+    # ..and configure it if needed
     if [[ $VAR1 -ne 0 ]] || [[ $VAR2 -ne 0 ]] || [[ $VAR3 -ne 0 ]] || [[ $VAR4 -ne 0 ]]; then
         printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" \
                "::" "Setting file: /usr/lib/systemd/system/tor.service"
 
-        # Backup original `tor.service` file in the backup directory
-        if ! cp -vf /usr/lib/systemd/system/tor.service "$backup_dir/tor.service.backup"; then
-            printf "\\n${red}%s${endc}\\n" \
-                   "[ failed ] can't copy original 'tor.service' file in the backup directory."
-
-            printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
-            exit 1
-        fi
-
-        # Copy new `tor.service` file with new settings
-        if ! cp -vf "$config_dir/tor.service" /usr/lib/systemd/system/tor.service; then
-            printf "\\n${red}%s${endc}\\n" \
-                   "[ failed ] can't set '/usr/lib/systemd/system/tor.service'"
-
-            printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
-            exit 1
-        fi
+        # replace original `tor.service` file
+        replace_file /usr/lib/systemd/system/tor.service tor.service
     fi
 
     # Check permissions of directory: `/var/lib/tor`
@@ -224,28 +233,13 @@ check_defaults() {
     grep -q -x 'TransPort 9040' /etc/tor/torrc
     VAR8=$?
 
-    # If this file is not configured, configure it now
+    # ..and configure it if needed
     if [ $VAR5 -ne 0 ] || [ $VAR6 -ne 0 ] || [ $VAR7 -ne 0 ] || [ $VAR8 -ne 0 ]; then
         printf "\\n${blue}%s${endc} ${green}%s${endc}\n" "::" \
                "Setting file: /etc/tor/torrc"
 
-        # Backup original `/etc/tor/torrc` file to the backup directory
-        if ! cp -vf /etc/tor/torrc "$backup_dir/torrc.backup"; then
-            printf "\\n${red}%s${endc}\\n" \
-                   "[ failed ] can't copy original tor 'torrc' file to the backup directory"
-
-            printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
-            exit 1
-        fi
-
-        # Copy new `torrc` file with settings for archtorify
-        if ! cp -vf "$config_dir/torrc" /etc/tor/torrc; then
-            printf "\\n${red}%s${endc}\\n" \
-                   "[ failed ] can't set '/etc/tor/torrc'"
-
-            printf "${red}%s${endc}\\n" "Please report bugs at: $report_url"
-            exit 1
-        fi
+        # replace original `/etc/tor/torrc` file
+        replace_file /etc/tor/torrc torrc
     fi
 }
 
@@ -364,20 +358,23 @@ stop() {
     # delete current `/etc/resolv.conf` file
     rm -v /etc/resolv.conf
 
-    # restore your default `/etc/resolv.conf` with `resolvconf`
+    # restore default `/etc/resolv.conf` file with `resolvconf`
     # (..if is installed), otherwise copy the original file from backup directory
     if hash resolvconf 2>/dev/null; then
         resolvconf -u
     else
         cp -vf "$backup_dir/resolv.conf.backup" /etc/resolv.conf
     fi
-    sleep 1
 
     # Restore default `/etc/tor/torrc` file
     printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" \
-           "::" "Restore '/etc/tor/torrc' file with default tor settings"
+           "::" "Restore default '/etc/tor/torrc' file"
     cp -vf "$backup_dir/torrc.backup" /etc/tor/torrc
-    sleep 1
+
+    # Restore default `/usr/lib/systemd/system/tor.service` file
+    printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" \
+           "::" "Restore default '/usr/lib/systemd/system/tor.service' file"
+    cp -vf "$backup_dir/tor.service.backup" /usr/lib/systemd/system/tor.service
 
     # Enable firewall ufw
     enable_ufw
@@ -479,7 +476,7 @@ restart() {
 # Print help menù
 #################
 usage() {
-    printf "${green}%s${endc}\\n" "$program $version"
+    printf "${green}%s${endc}\\n" "$prog_name $version"
 
     printf "${green}%s${endc}\\n\\n" "Transparent proxy through Tor for Arch Linux"
 
@@ -487,7 +484,7 @@ usage() {
 
     printf "${white}%s${endc} ${red}%s${endc} ${white}%s${endc} ${red}%s${endc}\\n" \
            "┌─╼" "$USER" "╺─╸" "$(hostname)"
-    printf "${white}%s${endc} ${green}%s${endc}\\n\\n" "└───╼" "./$program [option]"
+    printf "${white}%s${endc} ${green}%s${endc}\\n\\n" "└───╼" "./$prog_name [option]"
 
     printf "${green}%s${endc}\\n\\n" "Options:"
 
@@ -541,17 +538,17 @@ case "$1" in
         exit 0
         ;;
     --)
-        printf "%s\\n" "$program: '$1' it requires an argument!" >&2
-        printf "%s\\n" "Try '$program --help' for more information."
+        printf "%s\\n" "$prog_name: '$1' it requires an argument!" >&2
+        printf "%s\\n" "Try '$prog_name --help' for more information."
         exit 1
         ;;
     --*)
-        printf "%s\\n" "$program: Invalid option '$1' !" >&2
-        printf "%s\\n" "Try '$program --help' for more information."
+        printf "%s\\n" "$prog_name: Invalid option '$1' !" >&2
+        printf "%s\\n" "Try '$prog_name --help' for more information."
         exit 1
         ;;
     *)
-        printf "%s\\n" "$program: Invalid option $1!" >&2
-        printf "%s\\n" "Try '$program --help' for more information."
+        printf "%s\\n" "$prog_name: Invalid option $1!" >&2
+        printf "%s\\n" "Try '$prog_name --help' for more information."
         exit 1
 esac
