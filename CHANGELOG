@@ -13,3 +13,8 @@ Modified file data/torrc
 Update file /data/torrc.default
 Little fixes in printf functions
 
+
+/** 1.14.0 / 22 July 2018 **/
+
+Added function replace_files()
+
