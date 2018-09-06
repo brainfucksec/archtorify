@@ -18,3 +18,13 @@ Little fixes in printf functions
 
 Added function replace_files()
 
+
+/** 1.15.0 / 06 Sep 2018 **/
+
+Changed names of command line arguments and added "shortopts"
+Change entries on 'usage()' function (help menù)
+Improve output redirection of commands
+Change 'banner()' function
+Modified file 'data/torrc'
+Update Makefile
+Update README
