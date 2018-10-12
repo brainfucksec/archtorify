@@ -24,12 +24,12 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.15.0"
+readonly version="1.15.1"
 readonly author="Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
 # URL for BUG reports :)
-report_url="https://github.com/brainfucksec/archtorify/issues"
+readonly report_url="https://github.com/brainfucksec/archtorify/issues"
 
 # Define colors for terminal output
 export red=$'\e[0;91m'
@@ -520,7 +520,7 @@ usage() {
 
 # Parse command line options
 ############################
-if [ "$#" == 0 ]; then
+if [ "$#" -eq 0 ]; then
     printf "%s\\n" "$prog_name: Argument required"
     printf "%s\\n" "Try '$prog_name --help' for more information."
     exit 1

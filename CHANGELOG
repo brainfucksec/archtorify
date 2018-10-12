@@ -28,3 +28,8 @@ Change 'banner()' function
 Modified file 'data/torrc'
 Update Makefile
 Update README
+
+
+/** 1.15.1 / 12 Oct 2018 **/
+
+Fix comparison operator for parsing command line options
