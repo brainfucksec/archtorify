@@ -46,7 +46,7 @@ sudo reboot
 
 ## Usage
 
-**archtorify [option****]**
+**archtorify [option]**
 
 ### Options:
 
