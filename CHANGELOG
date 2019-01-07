@@ -33,3 +33,11 @@ Update README
 /** 1.15.1 / 12 Oct 2018 **/
 
 Fix comparison operator for parsing command line options
+
+
+/** 1.16.0 / 03 Jan 2019 **/
+
+Many comments modified for better reading the code (I hope)
+Changes on 'main()' function, change order of dns/iptables instructions
+Little changes on 'banner()' function
+Added information on 'check_status()' function if a network error occurred
