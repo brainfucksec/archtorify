@@ -2,7 +2,7 @@
 
 # About archtorify
 
-archtorify is a shell script for [Arch Linux](https://www.archlinux.org/) which use [iptables](https://www.netfilter.org/projects/iptables/index.html) settings for create a transparent proxy through TorNetwork, the program also allows you to perform various checks like checking the Tor Exit Node (i.e. your public IP when you are under Tor proxy) or if Tor has been configured correctly.
+archtorify is a shell script for [Arch Linux](https://www.archlinux.org/) which use [iptables](https://www.netfilter.org/projects/iptables/index.html) settings to create a transparent proxy through TorNetwork, the program also allows you to perform various checks like checking the Tor Exit Node (i.e. your public IP when you are under Tor proxy) or if Tor has been configured correctly.
 
 ## What is Transparent Proxy through Tor?
 
@@ -35,7 +35,9 @@ For this, you should change at least the hostname and the MAC address:
 
 [Changing MAC Address on Linux](https://wiki.archlinux.org/index.php/MAC_address_spoofing)
 
-Arch Linux is a user-centric distribution, for this, configuration of transparent proxy strongly depends on your network settings, before starting the program make sure you have read the Arch Linux wiki pages [about Tor](https://wiki.archlinux.org/index.php/Tor) and [network configuration](https://wiki.archlinux.org/index.php/Network_configuration)
+**Arch Linux is a user-centric distribution, for this, configuration of transparent proxy strongly depends on your network settings**.
+
+Before starting the program make sure you have read the Arch Linux wiki pages [about Tor](https://wiki.archlinux.org/index.php/Tor) and [network configuration](https://wiki.archlinux.org/index.php/Network_configuration)
 
 ## Install
 
