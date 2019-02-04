@@ -28,7 +28,7 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.17.0"
+readonly version="1.17.1"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly bug_report="Please report bug to <https://github.com/brainfucksec/archtorify/issues>."
 
@@ -72,8 +72,7 @@ printf "${bold_white}
 =========================================
 
 =[ Arch Linux
-=[ Transparent proxy through Tor
-=========================================${endc}\\n"
+=[ Transparent proxy through Tor${endc}\\n"
 
 printf "${white}
 Version: $version
@@ -209,20 +208,23 @@ check_defaults() {
     #
     # grep required strings from existing file
     grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
-    VAR1=$?
+    local string1=$?
 
     grep -q -x 'User=root' /usr/lib/systemd/system/tor.service
-    VAR2=$?
+    local string2=$?
 
     grep -q -x 'Group=root' /usr/lib/systemd/system/tor.service
-    VAR3=$?
+    local string3=$?
 
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
-    VAR4=$?
+    local string4=$?
 
     # if required strings does not exists replace original
     # `tor.service` file
-    if [[ $VAR1 -ne 0 ]] || [[ $VAR2 -ne 0 ]] || [[ $VAR3 -ne 0 ]] || [[ $VAR4 -ne 0 ]]; then
+    if [[ "$string1" -ne 0 ]] ||
+       [[ "$string2" -ne 0 ]] ||
+       [[ "$string3" -ne 0 ]] ||
+       [[ "$string4" -ne 0 ]]; then
 
         printf "\\n${blue}%s${endc} ${green}%s${endc}\\n" \
                "::" "Setting file: /usr/lib/systemd/system/tor.service"
@@ -261,20 +263,23 @@ check_defaults() {
     #
     # grep required strings from existing file
     grep -q -x 'User tor' /etc/tor/torrc
-    VAR5=$?
+    local string1=$?
 
     grep -q -x 'SocksPort 9050' /etc/tor/torrc
-    VAR6=$?
+    local string2=$?
 
     grep -q -x 'DNSPort 53' /etc/tor/torrc
-    VAR7=$?
+    local string3=$?
 
     grep -q -x 'TransPort 9040' /etc/tor/torrc
-    VAR8=$?
+    local string4=$?
 
     # if required strings does not exists replace original
     # `/etc/tor/torrc` file
-    if [[ $VAR5 -ne 0 ]] || [[ $VAR6 -ne 0 ]] || [[ $VAR7 -ne 0 ]] || [[ $VAR8 -ne 0 ]]; then
+    if [[ "$string1" -ne 0 ]] ||
+       [[ "$string2" -ne 0 ]] ||
+       [[ "$string3" -ne 0 ]] ||
+       [[ "$string4" -ne 0 ]]; then
 
         printf "\\n${blue}%s${endc} ${green}%s${endc}\n" "::" \
                "Setting file: /etc/tor/torrc"
@@ -295,7 +300,7 @@ check_ip() {
         external_ip="$(curl -s -m 10 http://ip-api.com)"; then
 
         printf "${blue}%s${endc} ${green}%s${endc}\\n" "::" "IP Address Details:"
-        printf "${white}%s${endc}\\n" "$external_ip" | tr -d '"{}' | sed 's/ //g'
+        printf "${white}%s${endc}\\n" "$external_ip" | tr -d '"{}' | sed 's/  //g'
     else
         printf "${red}%s${endc}\\n\\n" "[ failed ] curl: HTTP request error"
 
@@ -588,7 +593,7 @@ usage() {
            "-t, --tor       start transparent proxy through tor"
 
     printf "${white}%s${endc}\\n" \
-           "-c, --clearnet  reset iptables and return to clear navigation"
+           "-c, --clearnet  reset iptables and return to clearnet navigation"
 
     printf "${white}%s${endc}\\n" \
            "-s, --status    check status of program and services"
@@ -597,7 +602,7 @@ usage() {
            "-i, --ipinfo    show public IP"
 
     printf "${white}%s${endc}\\n" \
-           "-r, --restart   restart tor service and change IP"
+           "-r, --restart   restart tor service and change Tor exit node"
 
     printf "${white}%s${endc}\\n" \
            "-v, --version   display program version and exit"
