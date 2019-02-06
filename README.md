@@ -1,3 +1,8 @@
+[![Build Status](https://img.shields.io/github/forks/brainfucksec/archtorify.svg)](https://github.com/brainfucksec/archtorify)
+[![Build Status](https://img.shields.io/github/stars/brainfucksec/archtorify.svg)](https://github.com/brainfucksec/archtorify)
+[![License](https://img.shields.io/github/license/brainfucksec/archtorify.svg)](https://github.com/brainfucksec/archtorify)
+[![Rawsec's CyberSecurity Inventory](https://inventory.rawsec.ml/img/badges/Rawsec-inventoried-FF5050_flat.svg)](https://inventory.rawsec.ml/tools.html#archtorify)
+
 # archtorify
 
 # About archtorify
