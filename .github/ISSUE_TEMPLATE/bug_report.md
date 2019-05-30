@@ -16,9 +16,11 @@ The error message returned by the program
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Version [e.g. 22]
+**Kali Linux Version (please complete the following information):**
+ Version: [e.g. 2019.2 64-Bit]
+
+**Other network proxies/firewalls or DNS applications installed**
+[e.g. Firewall UFW, DNSCrypt]
 
 **Additional context**
 Add any other context about the problem here.
