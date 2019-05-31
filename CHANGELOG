@@ -49,8 +49,24 @@ Added instructions for disable/enable IPv6
 Changes on 'check_ip()' function
 Changed order of functions: 'check_ip()' and 'check_status()' before 'main()'
 
+
 /** 1.17.1 / 04 Feb 2019 **/
 
 Changes on 'banner()' function
 Little fix on 'check_ip()' function
 
+
+/** 1.18.0 / 31 May 2019 **/
+
+Modified the program logic:
+The old 'main()' now is the 'start()' function
+The new 'main()'function is the caller of 'start()'
+
+Changed banner
+Added bold colors to output messages
+Changed website on 'check_ip()' function (see commit for details)
+
+git specific:
+Added archtorify wiki
+Update README
+Added issues template
