@@ -14,10 +14,13 @@ A clear and concise description of what the bug is.
 The error message returned by the program.
 
 **Screenshots**
-if applicable, add screenshots to help explain your problem.
+If applicable, add screenshots to help explain your problem.
 
 **Other network proxies/firewalls or DNS applications installed**
-[e.g. Firewall UFW, DNSCrypt]
+[e.g. firewalld, UFW, DNSCrypt]
+
+**Shell used**
+[e.g. bash, zsh, ksh]
 
 **Additional context**
 Add any other context about the problem here.
