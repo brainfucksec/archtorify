@@ -70,3 +70,11 @@ git specific:
 Added archtorify wiki
 Update README
 Added issues template
+
+
+/** 1.19.0 / xx Aug 2019 **/
+
+Delete readonly variable: 'bug_report_url'
+Changes on functions 'start(), stop()': delete excessive output'
+Add function 'die()' for exception handling
+Improve function 'check_ip()'

@@ -28,11 +28,9 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.18.0"
+readonly version="1.19.0"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
-readonly bug_report_url="Please report bugs to <https://github.com/brainfucksec/archtorify/issues>."
-
 
 # Colors for terminal output (b = bold)
 export red=$'\e[0;91m'
@@ -66,7 +64,7 @@ readonly backup_dir="/opt/archtorify/backups"
 # Show program banner
 # ===================================================================
 banner() {
-printf "${bwhite}
+printf "${bcyan}
  _____         _   _           _ ___
 |  _  |___ ___| |_| |_ ___ ___|_|  _|_ _
 |     |  _|  _|   |  _| . |  _| |  _| | |
@@ -80,13 +78,20 @@ ${endc}\\n\\n"
 
 
 # ===================================================================
+# Print a message and exit with (1) when an error occurs
+# ===================================================================
+die() {
+    printf "${red}%s${endc}\\n" "$@" >&2
+    exit 1
+}
+
+
+# ===================================================================
 # Check if the program run as a root
 # ===================================================================
 check_root() {
     if [[ "$(id -u)" -ne 0 ]]; then
-        printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] Please run this program as a root!" 2>&1
-        exit 1
+        die "[ failed ] Please run this program as a root!"
     fi
 }
 
@@ -151,18 +156,12 @@ replace_file() {
 
     # Backup original file in the backup directory
     if ! cp -vf "$1" "$backup_dir/$2.backup" 2>/dev/null; then
-        printf "\\n${red}%s${endc}\\n" \
-            "[ failed ] can't copy original '$1' file in the backup directory."
-
-        printf "%s\\n" "$bug_report_url"
-        exit 1
+        die "[ failed ] can't copy original '$1' file in the backup directory."
     fi
 
     # Copy new file from `archtorify` configuration directory
     if ! cp -vf "$config_dir/$2" "$1" 2>/dev/null; then
-        printf "\\n${red}%s${endc}\\n" "[ failed ] can't set '$1'"
-        printf "%s\\n" "$bug_report_url"
-        exit 1
+        die "[ failed ] can't set '$1'"
     fi
 }
 
@@ -183,23 +182,17 @@ check_defaults() {
     # Check: dependencies
     # ===================
     if ! hash tor 2>/dev/null; then
-        printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] tor isn't installed, exit"
-        exit 1
+        die "[ failed ] tor isn't installed, exit"
     fi
 
-    # Check: program's defaults directories
+    # Check: defaults directories
     # =====================================
     if [ ! -d "$backup_dir" ]; then
-        printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] directory '$backup_dir' not exist, run makefile first!"
-        exit 1
+        die "[ failed ] directory '$backup_dir' not exist, run makefile first!"
     fi
 
     if [ ! -d "$config_dir" ]; then
-        printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] directory '$config_dir' not exist, run makefile first!"
-        exit 1
+        die "[ failed ] directory '$config_dir' not exist, run makefile first!"
     fi
 
     # Check file: `/usr/lib/systemd/system/tor.service`
@@ -296,18 +289,26 @@ check_ip() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "==>" "Checking your public IP, please wait..."
 
-    if external_ip="$(curl -s -m 10 http://ipinfo.io)" ||
-        external_ip="$(curl -s -m 10 https://ipapi.co/json)"; then
+    # url list for curl requests
+    url_list=(
+        'http://ip-api.com/'
+        'https://ipinfo.io/'
+        'https://api.myip.com'
+    )
+
+    # if the first request fails try with the next
+    for url in "${url_list[@]}"; do
+        request="$(curl -s "$url")"
+        response="$?"
+
+        if [[ "$response" -ne 0 ]]; then
+            continue
+        fi
 
         printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "IP Address Details:"
-        printf "${white}%s${endc}\\n" "$external_ip" | tr -d '"{}' | sed 's/  //g'
-    else
-        printf "${red}%s${endc}\\n\\n" "[ failed ] curl: HTTP request error"
-
-        printf "%s\\n" "try another Tor circuit with '$prog_name --restart'"
-        printf "%s\\n" "$bug_report_url"
-        exit 1
-    fi
+        printf "${white}%s${endc}\\n" "$request"
+        break
+    done
 }
 
 
@@ -331,8 +332,7 @@ check_status () {
         printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n\\n" \
                "[ ok ]" "Tor service is active"
     else
-        printf "${red}%s${endc}\\n" "[-] Tor service is not running! exit"
-        exit 1
+        die "[-] Tor service is not running! exit"
     fi
 
     # Check tor network settings
@@ -356,9 +356,7 @@ check_status () {
                "[ ok ]" "Your system is configured to use Tor"
     else
         printf "${red}%s${endc}\\n\\n" "[!] Your system is not using Tor"
-
         printf "%s\\n" "try another Tor circuit with '$prog_name --restart'"
-        printf "%s\\n" "$bug_report_url"
         exit 1
     fi
 
@@ -394,16 +392,12 @@ start() {
     # Configure system's DNS resolver to use Tor's DNSPort
     # on the loopback interface, i.e. write nameserver 127.0.0.1
     # to `etc/resolv.conf` file
-    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
+    printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Configure system's DNS resolver to use Tor's DNSPort"
 
     # backup current resolv.conf
     if ! cp -vf /etc/resolv.conf "$backup_dir/resolv.conf.backup" 2>/dev/null; then
-        printf "${red}%s${endc}\\n" \
-               "[ failed ] can't copy resolv.conf to the backup directory"
-
-        printf "%s\\n" "$bug_report_url"
-        exit 1
+        die "[ failed ] can't copy resolv.conf to the backup directory"
     fi
 
     # write new nameserver
@@ -426,46 +420,35 @@ start() {
         printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
             "[ ok ]" "Tor service started"
     else
-        printf "${red}%s${endc}\\n" "[ failed ] systemd error, exit!"
-        exit 1
+        die "[ failed ] systemd error, exit!"
     fi
 
     # iptables settings
     # =================
     #
-    # Save current iptables rules
-    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}" "::" "Backup iptables... "
+    # Setup iptables rules
+    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Setup new iptables rules"
+
+    # Backup current iptables rules
     iptables-save > "$backup_dir/iptables.backup"
-    printf "%s\\n" "Done"
 
     # Flush current iptables rules
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}" "::" "Flush current iptables... "
     iptables -F
     iptables -t nat -F
-    printf "%s\\n" "Done"
 
-    # Set new iptables rules
-    # ======================
-    #
     # write new iptables rules on file: `/etc/iptables/iptables.rules`
     #
     # reference file: `/usr/share/archtorify/data/iptables.rules`
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Set new iptables rules "
-
     if ! cp -vf "$config_dir/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
-        printf "\\n${red}%s${endc}\\n" \
-               "[ failed ] can't set '/etc/iptables/iptables.rules'"
-
-        printf "%s\\n" "$bug_report_url"
-        exit 1
-    else
-        printf "\\n"
+        die "[ failed ] can't set '/etc/iptables/iptables.rules'"
     fi
+
+    printf "\\n"
 
     # check program status
     check_status
 
-    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+    printf "\\n${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "[ ok ]" "Transparent Proxy activated, your system is under Tor"
 }
 
@@ -482,26 +465,27 @@ stop() {
            "==>" "Stopping Transparent Proxy"
     sleep 2
 
-    # Resets default settings
-    # =======================
+    # Resets default iptables rules:
+    # ==============================
     #
-    # Flush current iptables rules
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}" "::" "Flush iptables rules... "
+    printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Restore default iptables rules"
+
+    # Flush iptables rules
     iptables -F
     iptables -t nat -F
-    printf "%s\\n" "Done"
 
-    # Restore iptables
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}" \
-           "::" "Restore the default iptables rules... "
-
+    # Restore iptables from backup
     iptables-restore < "$backup_dir/iptables.backup"
-    printf "%s\\n" "Done"
+
+    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+        "[ ok ]" "iptables rules restored"
 
     # Stop tor.service
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}" "::" "Stop Tor service... "
+    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Stop Tor service"
     systemctl stop tor.service
-    printf "%s\\n" "Done"
+
+    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+        "[ ok ]" "Tor service stopped"
 
     # Restore `/etc/resolv.conf`
     # =========================
@@ -610,7 +594,7 @@ usage() {
 
     printf "${white}
 Project URL: $git_url
-Report bugs: https://github.com/brainfucksec/archtorify/issues${endc}\\n"
+Report bugs: $git_url/issues${endc}\\n"
 
     exit 0
 }
