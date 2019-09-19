@@ -13,7 +13,6 @@ Transparent Proxy through Tor for Arch Linux
 <a href="https://github.com/brainfucksec/archtorify/blob/master/LICENSE"><img src="https://img.shields.io/github/license/brainfucksec/archtorify.svg"></a>
 </p>
 
-
 ## About archtorify
 
 **archtorify** is a shell script for [Arch Linux](https://www.archlinux.org/) which use [iptables](https://www.netfilter.org/projects/iptables/index.html) settings to create a **Transparent Proxy through the Tor Network**, the program also allows you to perform various checks like checking the Tor Exit Node (i.e. your public IP when you are under Tor proxy) or if Tor has been configured correctly checking service and network settings.
@@ -31,8 +30,10 @@ To know how to install and use **archtorify** see the \[[Wiki](https://github.co
 
 * A special thanks goes also to the [Whonix](https://www.whonix.org/) Team and their [documentation](https://www.whonix.org/wiki/Documentation)
 
-## Support archtorify
+## Donate
 
-Please consider donating to sustain this project
+I accept Bitcoin donations. This will help me to pay various costs. My Bitcoin address is:
 
-**BITCOIN:** 1B39SnAXcR2bkxNpNy3AuckgaTshqNc2ce
+```
+1B39SnAXcR2bkxNpNy3AuckgaTshqNc2ce
+```

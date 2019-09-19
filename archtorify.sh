@@ -28,7 +28,7 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.0"
+readonly version="1.19.1"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -54,8 +54,7 @@ export byellow=$'\e[1;96m'
 # Configuration files: /usr/share/archtorify/data
 # Backup files: /opt/archtorify/backups
 readonly config_dir="/usr/share/archtorify/data"
-readonly backup_dir="/opt/archtorify/backups"
-
+readonly backup_dir="/usr/share/archtorify/backups"
 # End settings
 # ===================================================================
 
@@ -119,6 +118,7 @@ disable_ufw() {
             printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
                    "::" "Disabling firewall ufw, please wait..."
             ufw disable
+            printf "\\n"
         else
             ufw status | grep -q inactive$;
             printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
@@ -373,8 +373,7 @@ start() {
     #sleep 1
     check_defaults
 
-    # Stop tor.service
-    # ================
+    # stop tor.service before changing tor settings
     if systemctl is-active tor.service >/dev/null 2>&1; then
         systemctl stop tor.service
     fi
@@ -467,7 +466,6 @@ stop() {
 
     # Resets default iptables rules:
     # ==============================
-    #
     printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Restore default iptables rules"
 
     # Flush iptables rules
@@ -492,13 +490,12 @@ stop() {
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Restore '/etc/resolv.conf' file with default DNS"
 
-    # delete current `/etc/resolv.conf` file
-    rm -v /etc/resolv.conf
-
     # restore file with `resolvconf` program if exists
     # otherwise copy the original file from backup directory
     if hash resolvconf 2>/dev/null; then
         resolvconf -u
+        printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+            "[ ok ]" "resolvconf: update '/etc/resolv.conf'"
     else
         cp -vf "$backup_dir/resolv.conf.backup" /etc/resolv.conf
     fi
@@ -646,6 +643,5 @@ main() {
         shift
     done
 }
-
 
 main "$@"
