@@ -28,7 +28,7 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.1"
+readonly version="1.19.2"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -370,7 +370,7 @@ check_status () {
 start() {
     banner
     check_root
-    #sleep 1
+    sleep 2
     check_defaults
 
     # stop tor.service before changing tor settings
@@ -473,14 +473,14 @@ stop() {
     iptables -t nat -F
 
     # Restore iptables from backup
-    iptables-restore < "$backup_dir/iptables.backup"
+    iptables-restore < "${backup_dir}/iptables.backup"
 
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
         "[ ok ]" "iptables rules restored"
 
     # Stop tor.service
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "::" "Stop Tor service"
-    systemctl stop tor.service
+    systemctl stop tor.service iptables
 
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
         "[ ok ]" "Tor service stopped"
@@ -495,7 +495,7 @@ stop() {
     if hash resolvconf 2>/dev/null; then
         resolvconf -u
         printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
-            "[ ok ]" "resolvconf: update '/etc/resolv.conf'"
+            "[ ok ]" "update '/etc/resolv.conf'"
     else
         cp -vf "$backup_dir/resolv.conf.backup" /etc/resolv.conf
     fi

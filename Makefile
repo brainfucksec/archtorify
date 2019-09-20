@@ -1,5 +1,5 @@
 PROGRAM_NAME=archtorify
-VERSION=1.19.1
+VERSION=1.19.2
 
 DATA_DIR=/usr/share
 LICENSE_DIR=$(DATA_DIR)/licenses
@@ -20,6 +20,5 @@ uninstall:
 
 	rm -Rf $(PROGRAM_DIR)/$(PROGRAM_NAME)
 	rm -Rf $(DATA_DIR)/$(PROGRAM_NAME)
-	rm -Rf $(BACKUP_DIR)/$(PROGRAM_NAME)
 	rm -Rf $(LICENSE_DIR)/$(PROGRAM_NAME)
 	rm -Rf $(DOCS_DIR)/$(PROGRAM_NAME)
