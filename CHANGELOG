@@ -88,7 +88,7 @@ Little fix with program stdout ('start()' function)
 
 /** 1.19.2 / 20 Sep 2019 **/
 
-Fix error on function: 'stop()' see: /commits
+Fix error on function: 'stop()' see: commit
 
 
 /** 1.19.3 / 26 Sep 2019 **/
@@ -97,3 +97,6 @@ Remove functions for manage 'ufw'
 Changes on 'printf' functions for output
 Changes on function 'usage()'
 
+
+/** 1.19.4 / 08 Nov 2019 **/
+Small code improvements

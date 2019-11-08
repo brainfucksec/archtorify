@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+# ===================================================================
 # archtorify.sh
 #
 # Arch Linux - Transparent proxy through Tor
 #
 # Copyright (C) 2015-2019 Brainfuck
-
+#
+#
 # GNU GENERAL PUBLIC LICENSE
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,6 +22,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ===================================================================
 
 
 # ===================================================================
@@ -28,11 +31,11 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.3"
+readonly version="1.19.4"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
-# Colors for terminal output (b = bold)
+# Colors for terminal output
 export red=$'\e[0;91m'
 export green=$'\e[0;92m'
 export blue=$'\e[0;94m'
@@ -40,6 +43,7 @@ export white=$'\e[0;97m'
 export cyan=$'\e[0;96m'
 export endc=$'\e[0m'
 
+# b = bold
 export bgreen=$'\e[1;92m'
 export bblue=$'\e[1;94m'
 export bwhite=$'\e[1;97m'
@@ -128,7 +132,7 @@ replace_file() {
 # ===================================================================
 
 # Check:
-# -> required dependencies (only tor)
+# -> required tor package
 # -> program folders
 # -> tor systemd service file
 # -> tor `torrc` configuration file
@@ -361,7 +365,6 @@ start() {
     sysctl -w net.ipv6.conf.all.disable_ipv6=1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
-
     # Start tor.service for new configuration
     # =======================================
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Start Tor service"
@@ -472,8 +475,7 @@ stop() {
 
     cp -vf "$backup_dir/tor.service.backup" /usr/lib/systemd/system/tor.service
 
-    # End program
-    # ===========
+
     printf "\\n${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "[-]" "Transparent Proxy stopped"
 }
