@@ -31,7 +31,7 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.4"
+readonly version="1.19.5"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -54,9 +54,9 @@ export byellow=$'\e[1;96m'
 # ===================================================================
 # Set program's directories and files
 # ===================================================================
-
+#
 # Configuration files: /usr/share/archtorify/data
-# Backup files: /opt/archtorify/backups
+# Backup files: /usr/share/archtorify/backups
 readonly config_dir="/usr/share/archtorify/data"
 readonly backup_dir="/usr/share/archtorify/backups"
 
@@ -73,7 +73,7 @@ printf "${bcyan}
                                     |___| v$version
 
 =[ Transparent proxy through Tor
-=[ BrainfuckSec
+=[ brainfucksec
 ${endc}\\n\\n"
 }
 
@@ -107,9 +107,9 @@ print_version() {
 
 
 # ===================================================================
-# Configuration of program files
+# Replace system files
 # ===================================================================
-
+#
 # Function for replace default system files with program files
 replace_file() {
     local source_file="$1"
@@ -130,18 +130,19 @@ replace_file() {
 # ===================================================================
 # Check default settings
 # ===================================================================
-
+#
 # Check:
-# -> required tor package
-# -> program folders
-# -> tor systemd service file
-# -> tor `torrc` configuration file
+# -> tor package
+# -> program folders, see: $backup_dir, $config_dir
+# -> tor systemd service file:  /usr/lib/systemd/system/tor.service
+# -> tor configuration file:    /etc/tor/torrc`
+# -> permissions of directory:  /var/lib/tor`
 check_defaults() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Check program settings"
 
-    # Check: dependencies
-    # ===================
+    # Check tor package
+    # =================
     if ! hash tor 2>/dev/null; then
         die "[ failed ] tor isn't installed, exit"
     fi
@@ -159,7 +160,7 @@ check_defaults() {
     # Check file: `/usr/lib/systemd/system/tor.service`
     # =================================================
     #
-    # reference file: `/usr/share/archtorify/data/tor.service`
+    # file to copy: `/usr/share/archtorify/data/tor.service`
     #
     # grep required strings from existing file
     grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
@@ -174,8 +175,7 @@ check_defaults() {
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
     local string4=$?
 
-    # if required strings does not exists replace original
-    # `tor.service` file
+    # if required strings does not exists copy new `tor.service` file
     if [[ "$string1" -ne 0 ]] ||
        [[ "$string2" -ne 0 ]] ||
        [[ "$string3" -ne 0 ]] ||
@@ -198,7 +198,6 @@ check_defaults() {
         printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
                "==>" "Setting permissions of directory: /var/lib/tor"
 
-        # Exec commands if needed:
         # set owner `tor`
         chown -R tor:tor /var/lib/tor
 
@@ -211,7 +210,7 @@ check_defaults() {
     # Check file: `/etc/tor/torrc`
     # ============================
     #
-    # reference file: `/usr/share/archtorify/data/torrc`
+    # file to copy: `/usr/share/archtorify/data/torrc`
     #
     # grep required strings from existing file
     grep -q -x 'User tor' /etc/tor/torrc
@@ -226,8 +225,7 @@ check_defaults() {
     grep -q -x 'TransPort 9040' /etc/tor/torrc
     local string4=$?
 
-    # if required strings does not exists replace original
-    # `/etc/tor/torrc` file
+    # if required strings does not exists copy new `torrc` file
     if [[ "$string1" -ne 0 ]] ||
        [[ "$string2" -ne 0 ]] ||
        [[ "$string3" -ne 0 ]] ||
@@ -274,7 +272,7 @@ check_ip() {
 # ===================================================================
 # Check status of program and services
 # ===================================================================
-
+#
 # Check:
 # -> tor.service
 # -> tor settings
@@ -297,12 +295,15 @@ check_status () {
     # Check tor network settings
     # ==========================
     #
-    # make http request with curl at: https://check.torproject.org/
+    # Make HTTP request with curl at: https://check.torproject.org/
     # and grep the necessary strings from the html page to test connection
     # with tor
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Check Tor network settings"
 
+    # hostport = curl socks5 settings:
+    #   --socks5 <host[:port]> SOCKS5 proxy on given host + port
+    #   --socks5-hostname <host[:port]> SOCKS5 proxy, pass host name to proxy
     local hostport="localhost:9050"
     local url="https://check.torproject.org/"
 
@@ -322,6 +323,7 @@ check_status () {
     # Check current public IP
     check_ip
 }
+
 
 # ===================================================================
 # Start transparent proxy
@@ -349,7 +351,7 @@ start() {
     printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
            "==>" "Configure system's DNS resolver to use Tor's DNSPort"
 
-    # backup current resolv.conf
+    # backup current file
     if ! cp -vf /etc/resolv.conf "$backup_dir/resolv.conf.backup" 2>/dev/null; then
         die "[ failed ] can't copy resolv.conf to the backup directory"
     fi
@@ -391,7 +393,7 @@ start() {
 
     # write new iptables rules on file: `/etc/iptables/iptables.rules`
     #
-    # reference file: `/usr/share/archtorify/data/iptables.rules`
+    # file to copy: `/usr/share/archtorify/data/iptables.rules`
     if ! cp -vf "$config_dir/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
         die "[ failed ] can't set '/etc/iptables/iptables.rules'"
     fi
@@ -409,9 +411,10 @@ start() {
 # ===================================================================
 # Stop transparent proxy
 # ===================================================================
-
+#
 # Stop connection with Tor Network and return to clearnet navigation
 stop() {
+    banner
     check_root
 
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
@@ -439,8 +442,8 @@ stop() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
         "[ ok ]" "Tor service stopped"
 
-    # Restore `/etc/resolv.conf`
-    # =========================
+    # Restore default `/etc/resolv.conf`
+    # ==================================
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
            "==>" "Restore '/etc/resolv.conf' file with default DNS"
 
@@ -549,7 +552,7 @@ usage() {
 # ===================================================================
 # Main function
 # ===================================================================
-
+#
 # Parse command line arguments and start program
 main() {
     if [[ "$#" -eq 0 ]]; then
