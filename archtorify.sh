@@ -236,6 +236,12 @@ check_defaults() {
 
         replace_file /etc/tor/torrc torrc
     fi
+    
+    # reload systemd daemons so tor service will start
+    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+           "::" "Systemctl is reloading daemons, please wait..."
+    systemctl --system daemon-reload
+
 }
 
 
