@@ -237,7 +237,7 @@ check_defaults() {
         replace_file /etc/tor/torrc torrc
     fi
     
-    # reload systemd daemons so tor service will start
+    # reload systemctl daemons so tor service will start
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Systemctl is reloading daemons, please wait..."
     systemctl --system daemon-reload
@@ -476,6 +476,12 @@ stop() {
            "==>" "Restore '/etc/tor/torrc' file with default tor settings"
 
     cp -vf "$backup_dir/torrc.backup" /etc/tor/torrc
+    
+    # reload systemctl daemons so tor service is able to be started manually afer cleanup
+    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+           "::" "Systemctl is reloading daemons, please wait..."
+    systemctl --system daemon-reload
+
 
     # Restore default `/usr/lib/systemd/system/tor.service`
     # =====================================================
