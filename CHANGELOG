@@ -75,7 +75,7 @@ Added issues template
 /** 1.19.0 / 24 Aug 2019 **/
 
 Delete readonly variable: 'bug_report_url'
-Changes on functions 'start(), stop()': delete excessive output'
+Changes on functions 'start(), stop()': delete excessive output
 Add function 'die()' for exception handling
 Improve function 'check_ip()'
 
@@ -105,3 +105,11 @@ Small code improvements
 /** 1.19.5 / 14 Dec 2019 **/
 Some code improvements (comments)
 Update wiki
+
+
+/** 1.19.6 / 19 Dec 2019 **/
+Fix systemd problem with tor.service and torrc file: merge Pull Request #2 (see: commits, Pull requests)
+
+Change function name: 'check_defaults()' -> 'check_settings()'
+Cleanup function 'usage()'
+

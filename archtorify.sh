@@ -31,7 +31,7 @@
 
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.5"
+readonly version="1.19.6"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -128,7 +128,7 @@ replace_file() {
 
 
 # ===================================================================
-# Check default settings
+# Check program settings
 # ===================================================================
 #
 # Check:
@@ -137,7 +137,7 @@ replace_file() {
 # -> tor systemd service file:  /usr/lib/systemd/system/tor.service
 # -> tor configuration file:    /etc/tor/torrc`
 # -> permissions of directory:  /var/lib/tor`
-check_defaults() {
+check_settings() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Check program settings"
 
@@ -202,9 +202,6 @@ check_defaults() {
         chown -R tor:tor /var/lib/tor
 
         chmod -R 700 /var/lib/tor
-
-        # reload systemd daemons
-        systemctl --system daemon-reload
     fi
 
     # Check file: `/etc/tor/torrc`
@@ -236,12 +233,23 @@ check_defaults() {
 
         replace_file /etc/tor/torrc torrc
     fi
+
+    # reload systemd daemons
+    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\n" \
+           "==>" "Reload systemd daemons"
+
+    systemctl --system daemon-reload
+
+    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+           "[ ok ]" "systemd daemons reloaded"
 }
 
 
 # ===================================================================
 # Check public IP
 # ===================================================================
+#
+# thanks to NotMilitaryAI for this function
 check_ip() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Checking your public IP, please wait..."
@@ -332,7 +340,7 @@ start() {
     banner
     check_root
     sleep 2
-    check_defaults
+    check_settings
 
     # stop tor.service before changing tor settings
     if systemctl is-active tor.service >/dev/null 2>&1; then
@@ -458,8 +466,8 @@ stop() {
     fi
     sleep 1
 
-    # Re-enable IPv6
-    # ==============
+    # Enable IPv6
+    # ===========
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Enable IPv6"
     sysctl -w net.ipv6.conf.all.disable_ipv6=0
     sysctl -w net.ipv6.conf.default.disable_ipv6=0
@@ -509,41 +517,30 @@ restart() {
 # Show help menù
 # ===================================================================
 usage() {
-    printf "${cyan}%s${endc}\\n" "$prog_name $version"
-    printf "${white}%s${endc}\\n" "Arch Linux - Transparent proxy through Tor"
-    printf "${white}%s${endc}\\n\\n" "$signature"
+    printf "%s\\n" "$prog_name $version"
+    printf "%s\\n" "Arch Linux - Transparent proxy through Tor"
+    printf "%s\\n\\n" "$signature"
 
-    printf "${green}%s${endc}\\n\\n" "Usage:"
+    printf "%s\\n\\n" "Usage: $prog_name [option]"
 
-    printf "${white}%s${endc} ${red}%s${endc} ${white}%s${endc} ${red}%s${endc}\\n" \
-           "┌─╼" "$USER" "╺─╸" "$(hostname)"
-    printf "${white}%s${endc} ${green}%s${endc}\\n\\n" "└───╼" "$prog_name [option]"
+    printf "%s\\n\\n" "Options:"
 
-    printf "${green}%s${endc}\\n\\n" "Options:"
+    printf "%s\\n" "-h, --help      show this help message and exit"
 
-    printf "${white}%s${endc}\\n" \
-           "-h, --help      show this help message and exit"
+    printf "%s\\n" "-t, --tor       start transparent proxy through tor"
 
-    printf "${white}%s${endc}\\n" \
-           "-t, --tor       start transparent proxy through tor"
+    printf "%s\\n" "-c, --clearnet  reset iptables and return to clearnet navigation"
 
-    printf "${white}%s${endc}\\n" \
-           "-c, --clearnet  reset iptables and return to clearnet navigation"
+    printf "%s$\\n" "-s, --status    check status of program and services"
 
-    printf "${white}%s${endc}\\n" \
-           "-s, --status    check status of program and services"
+    printf "%s\\n" "-i, --ipinfo    show public IP"
 
-    printf "${white}%s${endc}\\n" \
-           "-i, --ipinfo    show public IP"
+    printf "%s\\n" "-r, --restart   restart tor service and change Tor exit node"
 
-    printf "${white}%s${endc}\\n" \
-           "-r, --restart   restart tor service and change Tor exit node"
+    printf "%s\\n\\n" "-v, --version   display program version and exit"
 
-    printf "${white}%s${endc}\\n\\n" \
-           "-v, --version   display program version and exit"
-
-    printf "${green}%s${endc} ${white}%s${endc}\\n" "Project URL:" "$git_url"
-    printf "${green}%s${endc} ${white}%s${endc}\\n" "Report bugs:" "$git_url/issues"
+    printf "%s\\n" "Project URL: $git_url"
+    printf "%s\\n" "Report bugs: $git_url/issues"
 
     exit 0
 }
