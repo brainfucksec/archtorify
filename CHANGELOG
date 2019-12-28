@@ -112,4 +112,11 @@ Fix systemd problem with tor.service and torrc file: merge Pull Request #2 (see:
 
 Change function name: 'check_defaults()' -> 'check_settings()'
 Cleanup function 'usage()'
+Added 'banner()' function to 'stop()' function
+
+
+/** 1.19.7 / 27 Dec 2019 **/
+
+Fix parsing of command line arguments on 'main()' function
+Fix problem with iptables.service and tor.service (see: commit)
 

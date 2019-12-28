@@ -28,10 +28,10 @@
 # ===================================================================
 # General settings
 # ===================================================================
-
+#
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.6"
+readonly version="1.19.7"
 readonly signature="Copyright (C) 2015-2019 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -55,8 +55,8 @@ export byellow=$'\e[1;96m'
 # Set program's directories and files
 # ===================================================================
 #
-# Configuration files: /usr/share/archtorify/data
-# Backup files: /usr/share/archtorify/backups
+# Configuration files:  /usr/share/archtorify/data
+# Backup files:         /usr/share/archtorify/backups
 readonly config_dir="/usr/share/archtorify/data"
 readonly backup_dir="/usr/share/archtorify/backups"
 
@@ -120,7 +120,7 @@ replace_file() {
         die "[ failed ] can't copy original '$1' file in the backup directory."
     fi
 
-    # Copy new file from `archtorify` configuration directory
+    # Copy new file from configuration directory
     if ! cp -vf "$config_dir/$2" "$1" 2>/dev/null; then
         die "[ failed ] can't set '$1'"
     fi
@@ -135,8 +135,8 @@ replace_file() {
 # -> tor package
 # -> program folders, see: $backup_dir, $config_dir
 # -> tor systemd service file:  /usr/lib/systemd/system/tor.service
-# -> tor configuration file:    /etc/tor/torrc`
-# -> permissions of directory:  /var/lib/tor`
+# -> tor configuration file:    /etc/tor/torrc
+# -> permissions of directory:  /var/lib/tor
 check_settings() {
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
            "::" "Check program settings"
@@ -234,7 +234,7 @@ check_settings() {
         replace_file /etc/tor/torrc torrc
     fi
 
-    # reload systemd daemons
+    # reload systemd daemons for save changes
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\n" \
            "==>" "Reload systemd daemons"
 
@@ -342,7 +342,7 @@ start() {
     sleep 2
     check_settings
 
-    # stop tor.service before changing tor settings
+    # stop tor.service before changing network settings
     if systemctl is-active tor.service >/dev/null 2>&1; then
         systemctl stop tor.service
     fi
@@ -375,11 +375,11 @@ start() {
     sysctl -w net.ipv6.conf.all.disable_ipv6=1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
-    # Start tor.service for new configuration
-    # =======================================
+    # Start tor.service with new network configuration
+    # ================================================
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Start Tor service"
 
-    if systemctl start tor.service iptables 2>/dev/null; then
+    if systemctl start tor.service 2>/dev/null; then
         printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
             "[ ok ]" "Tor service started"
     else
@@ -388,9 +388,8 @@ start() {
 
     # iptables settings
     # =================
-    #
-    # Setup iptables rules
-    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Setup new iptables rules"
+    printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
+           "==>" "Set new iptables rules"
 
     # Backup current iptables rules
     iptables-save > "$backup_dir/iptables.backup"
@@ -399,14 +398,24 @@ start() {
     iptables -F
     iptables -t nat -F
 
-    # write new iptables rules on file: `/etc/iptables/iptables.rules`
-    #
-    # file to copy: `/usr/share/archtorify/data/iptables.rules`
-    if ! cp -vf "$config_dir/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
-        die "[ failed ] can't set '/etc/iptables/iptables.rules'"
+    # copy file `/usr/share/archtorify/data/iptables.rules` in the
+    # `/etc/iptables/` directory
+    if ! cp -f "$config_dir/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
+        die "[ failed ] can't copy file '/etc/iptables/iptables.rules'"
     fi
 
-    printf "\\n"
+    # set new iptables rules
+    if ! iptables-restore < /etc/iptables/iptables.rules 2>/dev/null; then
+            die "[ failed ] can't set iptables rules"
+    fi
+
+    # start iptables service
+    if systemctl start iptables 2>/dev/null; then
+        printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n\\n" \
+               "[ ok ]" "iptables rules set"
+    else
+        die "[ failed ] systemd error, exit!"
+    fi
 
     # check program status
     check_status
@@ -431,7 +440,8 @@ stop() {
 
     # Resets default iptables rules:
     # ==============================
-    printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Restore default iptables rules"
+    printf "${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
+           "==>" "Restore default iptables rules"
 
     # Flush iptables rules
     iptables -F
@@ -441,7 +451,7 @@ stop() {
     iptables-restore < "${backup_dir}/iptables.backup"
 
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
-        "[ ok ]" "iptables rules restored"
+           "[ ok ]" "iptables rules restored"
 
     # Stop tor.service
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Stop Tor service"
@@ -526,17 +536,11 @@ usage() {
     printf "%s\\n\\n" "Options:"
 
     printf "%s\\n" "-h, --help      show this help message and exit"
-
     printf "%s\\n" "-t, --tor       start transparent proxy through tor"
-
     printf "%s\\n" "-c, --clearnet  reset iptables and return to clearnet navigation"
-
     printf "%s$\\n" "-s, --status    check status of program and services"
-
     printf "%s\\n" "-i, --ipinfo    show public IP"
-
     printf "%s\\n" "-r, --restart   restart tor service and change Tor exit node"
-
     printf "%s\\n\\n" "-v, --version   display program version and exit"
 
     printf "%s\\n" "Project URL: $git_url"
@@ -562,7 +566,6 @@ main() {
         case "$1" in
             -t | --tor)
                 start
-                shift
                 ;;
             -c | --clearnet)
                 stop
