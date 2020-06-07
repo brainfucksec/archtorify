@@ -120,3 +120,9 @@ Added 'banner()' function to 'stop()' function
 Fix parsing of command line arguments on 'main()' function
 Fix problem with iptables.service and tor.service (see: commit)
 
+
+/** 1.20.0 / 7 Jun 2020 **/
+
+Function 'check_ip()': add website for IP lookup
+Function 'check_status()': remove 'check_root' instruction (see: ISSUE #5)
+Improve instructions for setting the iptables

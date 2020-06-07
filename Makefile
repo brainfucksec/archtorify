@@ -1,5 +1,5 @@
 PROGRAM_NAME=archtorify
-VERSION=1.19.7
+VERSION=1.20.0
 
 DATA_DIR=/usr/share
 LICENSE_DIR=$(DATA_DIR)/licenses

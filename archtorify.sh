@@ -5,7 +5,7 @@
 #
 # Arch Linux - Transparent proxy through Tor
 #
-# Copyright (C) 2015-2019 Brainfuck
+# Copyright (C) 2015-2020 Brainfuck
 #
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -31,8 +31,8 @@
 #
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.19.7"
-readonly signature="Copyright (C) 2015-2019 Brainfuck"
+readonly version="1.20.0"
+readonly signature="Copyright (C) 2015-2020 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
 # Colors for terminal output
@@ -258,7 +258,8 @@ check_ip() {
     url_list=(
         'http://ip-api.com/'
         'https://ipinfo.io/'
-        'https://api.myip.com'
+        'https://api.myip.com/'
+        'https://ipleak.net/json/'
     )
 
     # if the first request fails try with the next
@@ -286,8 +287,6 @@ check_ip() {
 # -> tor settings
 # -> public IP
 check_status () {
-    check_root
-
     # Check status of tor.service
     # ===========================
     printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
@@ -391,12 +390,14 @@ start() {
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" \
            "==>" "Set new iptables rules"
 
-    # Backup current iptables rules
+    # If exists, backup current iptables rules
     iptables-save > "$backup_dir/iptables.backup"
 
     # Flush current iptables rules
     iptables -F
+    iptables -X
     iptables -t nat -F
+    iptables -t nat -X
 
     # copy file `/usr/share/archtorify/data/iptables.rules` in the
     # `/etc/iptables/` directory
@@ -417,6 +418,7 @@ start() {
         die "[ failed ] systemd error, exit!"
     fi
 
+    sleep 3
     # check program status
     check_status
 
@@ -445,13 +447,29 @@ stop() {
 
     # Flush iptables rules
     iptables -F
+    iptables -X
     iptables -t nat -F
+    iptables -t nat -X
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
 
-    # Restore iptables from backup
-    iptables-restore < "${backup_dir}/iptables.backup"
+    # Restore iptables from backup if exists
+    if [[ -f "${backup_dir}/iptables.backup" ]]; then
+        iptables-restore < "${backup_dir}/iptables.backup"
 
-    printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
-           "[ ok ]" "iptables rules restored"
+        printf "${bcyan}%s${endc} ${bgreen}%s${endc}\\n" \
+               "[ ok ]" "iptables rules restored"
+    fi
+
+    # Rewrite default `/etc/iptables.rules` file
+    printf "# Empty iptables rule file
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+COMMIT
+" > "/etc/iptables/iptables.rules"
 
     # Stop tor.service
     printf "\\n${bblue}%s${endc} ${bgreen}%s${endc}\\n" "==>" "Stop Tor service"
@@ -538,7 +556,7 @@ usage() {
     printf "%s\\n" "-h, --help      show this help message and exit"
     printf "%s\\n" "-t, --tor       start transparent proxy through tor"
     printf "%s\\n" "-c, --clearnet  reset iptables and return to clearnet navigation"
-    printf "%s$\\n" "-s, --status    check status of program and services"
+    printf "%s\\n" "-s, --status    check status of program and services"
     printf "%s\\n" "-i, --ipinfo    show public IP"
     printf "%s\\n" "-r, --restart   restart tor service and change Tor exit node"
     printf "%s\\n\\n" "-v, --version   display program version and exit"
