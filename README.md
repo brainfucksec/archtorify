@@ -7,7 +7,7 @@ Transparent Proxy through Tor for Arch Linux
 </p>
 
 <p align="center">
-<a href="https://github.com/brainfucksec/archtorify/releases"><img src="https://img.shields.io/badge/version-1.20.0-blue"></a>
+<a href="https://github.com/brainfucksec/archtorify/releases"><img src="https://img.shields.io/badge/version-1.21.0-blue"></a>
 <a href="https://github.com/brainfucksec/archtorify/commits/master"><img src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
 <a href="https://github.com/brainfucksec/archtorify/wiki"><img src="https://img.shields.io/badge/docs-passing-brightgreen.svg"></a>
 <a href="https://github.com/brainfucksec/archtorify/blob/master/LICENSE"><img src="https://img.shields.io/github/license/brainfucksec/archtorify.svg"></a>
@@ -24,15 +24,25 @@ In simple terms, with archtorify you can redirect all traffic of your Arch Linux
 To know how to install and use **archtorify** see the \[[Wiki](https://github.com/brainfucksec/archtorify/wiki)\]
 
 
-## Thanks
+## Credits
 
-* This program would not exist without the users of [Arch Linux Community](https://bbs.archlinux.org/) that helped me in the building of the AUR package and the guides of the [Tor Project official website](https://www.torproject.org/)
+* The realization of this program was possible only with:
 
-* A special thanks goes also to the [Whonix](https://www.whonix.org/) Team and their [documentation](https://www.whonix.org/wiki/Documentation)
+    * The guides of the [Tor Project official website](https://www.torproject.org/)
+
+    * The users of [Arch Linux Community](https://bbs.archlinux.org/) that helped me in the building of the AUR package
+
+    * The [Whonix](https://www.whonix.org/) Team and their [documentation](https://www.whonix.org/wiki/Documentation)
+
+    * All users of who with their reports help to improve this project
+
+* "Tor" is a trademark of The Tor Project, Inc.. Please see: https://www.torproject.org
+
+---
 
 ## Donate
 
-I accept Bitcoin donations. This will help me to pay various costs. My Bitcoin address is:
+You can support archtorify by making a donation to this Bitcoin address:
 
 ```
 1B39SnAXcR2bkxNpNy3AuckgaTshqNc2ce

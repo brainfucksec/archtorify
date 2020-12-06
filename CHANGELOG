@@ -126,3 +126,11 @@ Fix problem with iptables.service and tor.service (see: commit)
 Function 'check_ip()': add website for IP lookup
 Function 'check_status()': remove 'check_root' instruction (see: ISSUE #5)
 Improve instructions for setting the iptables
+
+
+/** 1.21.0 / 06 Dic 2020 **/
+
+Fix: Function 'stop()' -> Added exception (check tor.service) before run.
+Changes on `printf()` functions (improve stdout messages).
+Change files: `data/torrc.default` `data/tor.service` (see: Arch Linux `tor` package files).
+
