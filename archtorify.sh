@@ -31,7 +31,7 @@
 #
 # Program information
 readonly prog_name="archtorify"
-readonly version="1.21.0"
+readonly version="1.21.2"
 readonly signature="Copyright (C) 2015-2020 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
