@@ -134,6 +134,15 @@ Fix: Function 'stop()' -> Added exception (check tor.service) before run.
 Changes on `printf()` functions (improve stdout messages).
 Change files: `data/torrc.default` `data/tor.service` (see: Arch Linux `tor` package files).
 
+
 /** 1.21.2 / 06 Dic 2020 **/
 
 Fix package release (see: commit, releases)
+
+
+/** 1.22.0 / 07 Jan 2021 **/
+
+Change "prefix" of ERROR messages
+Remove banner from stop() function
+Rename some local variables (see: commit)
+
