@@ -3,7 +3,7 @@
 # ===================================================================
 # archtorify.sh
 #
-# version: 1.23.0
+# version: 1.23.1
 #
 # Arch Linux - Transparent proxy through Tor
 #
@@ -31,7 +31,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.23.0"
+readonly version="1.23.1"
 readonly signature="Copyright (C) 2021 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -172,12 +172,12 @@ setup_iptables() {
             # rewrite default /etc/iptables.rules file
             # ----------------------------------------
             printf "# Empty iptables rule file
-        *filter
-        :INPUT ACCEPT [0:0]
-        :FORWARD ACCEPT [0:0]
-        :OUTPUT ACCEPT [0:0]
-        COMMIT
-        " > "/etc/iptables/iptables.rules"
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+COMMIT
+" > "/etc/iptables/iptables.rules"
             # ----------------------------------------
 
             printf "${b}${green}%s${reset} %s\\n" "==>" "Stop Tor service"
