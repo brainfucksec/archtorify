@@ -3,6 +3,8 @@
 # ===================================================================
 # archtorify.sh
 #
+# version: 1.23.0
+#
 # Arch Linux - Transparent proxy through Tor
 #
 # Copyright (C) 2015-2021 Brainfuck
@@ -25,17 +27,15 @@
 # ===================================================================
 
 
-# ===================================================================
-# General settings
-# ===================================================================
+## General
 #
-# Program information
+# program information
 readonly prog_name="archtorify"
-readonly version="1.22.0"
-readonly signature="Copyright (C) 2015-2021 Brainfuck"
+readonly version="1.23.0"
+readonly signature="Copyright (C) 2021 Brainfuck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
-# Set colors for terminal output
+# set colors for stdout
 export red="$(tput setaf 1)"
 export green="$(tput setaf 2)"
 export yellow="$(tput setaf 3)"
@@ -47,19 +47,15 @@ export b="$(tput bold)"
 export reset="$(tput sgr0)"
 
 
-# ===================================================================
-# Set program's directories
-# ===================================================================
+## Directories
 #
-# Configuration files:
+# config files:
 readonly config_dir="/usr/share/archtorify/data"
-# Directory for backup:
+# backups:
 readonly backup_dir="/usr/share/archtorify/backups"
 
 
-# ===================================================================
-# Show program banner
-# ===================================================================
+## Show program banner
 banner() {
 printf "${b}${cyan}
  _____         _   _           _ ___
@@ -74,45 +70,35 @@ ${reset}\\n\\n"
 }
 
 
-# ===================================================================
-# Print a message and exit with (1) when an error occurs
-# ===================================================================
+## Print a message and exit with (1) when an error occurs
 die() {
     printf "${red}%s${reset}\\n" "$@" >&2
     exit 1
 }
 
-
-# ===================================================================
-# Check if the program run as a root
-# ===================================================================
+## Check if the program run as a root
 check_root() {
-    if [[ "$(id -u)" -ne 0 ]]; then
+    if [[ "${UID}" -ne 0 ]]; then
         die "[ERROR] Please run this program as a root!"
     fi
 }
 
 
-# ===================================================================
-# Display program version
-# ===================================================================
+## Display program version
 print_version() {
     printf "%s\\n" "${prog_name} ${version}"
     printf "%s\\n" "${signature}"
     printf "%s\\n" "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>"
     printf "%s\\n" "This is free software: you are free to change and redistribute it."
     printf "%s\\n" "There is NO WARRANTY, to the extent permitted by law."
-
     exit 0
 }
 
 
-# ===================================================================
-# Replace system files
-# ===================================================================
+## Replace system files
 #
-# Backup default system files in the /usr/share/archtorify/backups dir
-# and replaces them with the files in the /usr/share/archtorify/data dir.
+# Backup default system files in /usr/share/archtorify/backups directory and
+# replace them with files of /usr/share/archtorify/data directory.
 #
 # Function usage: replace_file <default_file> <new_file>
 # e.g.: replace_file /etc/tor/torrc torrc
@@ -120,21 +106,90 @@ replace_file() {
     local default_file="$1"
     local new_file="$2"
 
-    # backup old file
+    # backup
     if ! cp "$1" "${backup_dir}/$2.backup" 2>/dev/null; then
         die "[ERROR] can't backup '$1'"
     fi
 
-    # replace with new file
+    # replace
     if ! cp "${config_dir}/$2" "$1" 2>/dev/null; then
         die "[ERROR] can't set '$1'"
     fi
 }
 
 
-# ===================================================================
-# Check program settings
-# ===================================================================
+## iptables settings
+#
+# This function is used with args in start() & stop() for set/restore iptables.
+#
+# Args:
+#       tor_proxy -> set rules for Tor transparent proxy
+#       default   -> restore default iptables
+setup_iptables() {
+    case "$1" in
+        tor_proxy)
+            printf "${b}${green}%s${reset} %s\\n" "==>" "Set iptables rules"
+
+            ## flush current iptables rules
+            iptables -F
+            iptables -X
+            iptables -t nat -F
+            iptables -t nat -X
+            iptables -P INPUT ACCEPT
+            iptables -P FORWARD ACCEPT
+            iptables -P OUTPUT ACCEPT
+
+            # copy file /usr/share/archtorify/data/iptables.rules in the
+            # /etc/iptables/ directory
+            if ! cp -f "${config_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
+                die "[ERROR] can't copy file /etc/iptables/iptables.rules"
+            fi
+
+            # set new iptables rules
+            if ! iptables-restore < /etc/iptables/iptables.rules 2>/dev/null; then
+                die "[ERROR] can't set iptables rules"
+            fi
+
+            # start iptables service
+            if ! systemctl start iptables 2>/dev/null; then
+                die "[ERROR] systemd error, exit!"
+            fi
+        ;;
+
+        # restore default
+        default)
+            printf "${b}${green}%s${reset} %s\\n" "==>" "Restore default iptables"
+
+            # flush iptables rules
+            iptables -F
+            iptables -X
+            iptables -t nat -F
+            iptables -t nat -X
+            iptables -P INPUT ACCEPT
+            iptables -P FORWARD ACCEPT
+            iptables -P OUTPUT ACCEPT
+
+            # rewrite default /etc/iptables.rules file
+            # ----------------------------------------
+            printf "# Empty iptables rule file
+        *filter
+        :INPUT ACCEPT [0:0]
+        :FORWARD ACCEPT [0:0]
+        :OUTPUT ACCEPT [0:0]
+        COMMIT
+        " > "/etc/iptables/iptables.rules"
+            # ----------------------------------------
+
+            printf "${b}${green}%s${reset} %s\\n" "==>" "Stop Tor service"
+            systemctl stop tor.service iptables
+
+        ;;
+    esac
+
+}
+
+
+## Check program settings
 #
 # - tor package
 # - program folders, see: ${backup_dir}, ${config_dir}
@@ -144,12 +199,10 @@ replace_file() {
 check_settings() {
     printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" "::" "Check program settings"
 
-    # Check: tor package
     if ! hash tor 2>/dev/null; then
         die "[ERROR] tor isn't installed, exit"
     fi
 
-    # Check: defaults directories
     if [[ ! -d "${backup_dir}" ]]; then
         die "[ERROR] directory '${backup_dir}' not exist, run makefile first!"
     fi
@@ -158,7 +211,7 @@ check_settings() {
         die "[ERROR] directory '${config_dir}' not exist, run makefile first!"
     fi
 
-    # Check: file /usr/lib/systemd/system/tor.service
+    # check /usr/lib/systemd/system/tor.service
     #
     # grep required strings from existing file
     grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
@@ -173,19 +226,18 @@ check_settings() {
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
     local string4=$?
 
-    # if required strings does not exists copy file
-    # /usr/share/archtorify/data/tor.service
+    # if required strings does not exists copy new tor.service file
     if [[ "$string1" -ne 0 ]] ||
        [[ "$string2" -ne 0 ]] ||
        [[ "$string3" -ne 0 ]] ||
        [[ "$string4" -ne 0 ]]; then
 
         printf "${b}${green}%s${reset} %s\\n" \
-                "==>" "Setting file: /usr/lib/systemd/system/tor.service"
+                "==>" "Set file: /usr/lib/systemd/system/tor.service"
         replace_file /usr/lib/systemd/system/tor.service tor.service
     fi
 
-    # Check: permissions of /var/lib/tor
+    # check /var/lib/tor permissions
     #
     # required:
     # -rwx------  tor tor
@@ -194,14 +246,17 @@ check_settings() {
         [[ "$(stat -c '%a' /var/lib/tor)" != "700" ]]; then
 
         printf "${b}${green}%s${reset} %s\\n" \
-                "==>" "Setting permissions of directory: /var/lib/tor"
+                "==>" "Set permissions of /var/lib/tor directory"
         chown -R tor:tor /var/lib/tor
         chmod -R 700 /var/lib/tor
     fi
 
-    # Check: file /etc/tor/torrc
-    #
-    # grep required strings from existing file
+    # check /etc/tor/torrc
+    if [[ ! -f /etc/tor/torrc ]]; then
+        die "[ERROR] /etc/tor/torrc file not exist, check Tor configuration"
+    fi
+
+    # if torrc exist grep required strings
     grep -q -x 'User tor' /etc/tor/torrc
     local string1=$?
 
@@ -221,7 +276,7 @@ check_settings() {
        [[ "$string3" -ne 0 ]] ||
        [[ "$string4" -ne 0 ]]; then
 
-        printf "${b}${green}%s${reset} %s\\n" "==>" "Setting file: /etc/tor/torrc"
+        printf "${b}${green}%s${reset} %s\\n" "==>" "Set /etc/tor/torrc"
         replace_file /etc/tor/torrc torrc
     fi
 
@@ -231,23 +286,23 @@ check_settings() {
 }
 
 
-# ===================================================================
-# Check public IP
-# ===================================================================
+## Check public IP address
 #
-# thanks to "NotMilitaryAI" for this function
+# Make an HTTP request to the URL in the list, if the first request fails, try
+# with the next, then print the IP address.
+#
+# Thanks to "NotMilitaryAI" for this function
 check_ip() {
-    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" "::" "Checking your public IP..."
+    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" \
+            "::" "Check public IP Address"
 
-    # URL list for curl requests
-    url_list=(
+    local url_list=(
         'http://ip-api.com/'
         'https://ipleak.net/json/'
         'https://ipinfo.io/'
         'https://api.myip.com/'
     )
 
-    # if the first request fails try with the next
     for url in "${url_list[@]}"; do
         local request="$(curl -s "$url")"
         local response="$?"
@@ -256,24 +311,19 @@ check_ip() {
             continue
         fi
 
-        printf "${b}%s${reset}\\n" "IP Address Details:"
         printf "%s\\n" "${request}"
         break
     done
 }
 
-
-# ===================================================================
-# Check status of program and services
-# ===================================================================
+## Check status of program and services
 #
 # - tor.service
-# - tor settings
-# - public IP
+# - tor settings (check if Tor works correctly)
+# - public IP address
 check_status() {
-    # Check status of tor.service
-    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" "::" \
-            "Check current status of Tor service"
+    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" \
+            "::" "Check current status of Tor service"
 
     if systemctl is-active tor.service >/dev/null 2>&1; then
         printf "${b}${green}%s${reset} ${b}%s${reset}\\n\\n" \
@@ -282,12 +332,11 @@ check_status() {
         die "[-] Tor service is not running! exit"
     fi
 
-    # Check tor network settings
-    #
     # make HTTP request with curl at: https://check.torproject.org/
     # and grep the necessary strings from the html page to test connection
     # with tor
-    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" "::" "Check Tor network settings"
+    printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" \
+            "::" "Check Tor network settings"
 
     # curl option details:
     #   --socks5 <host[:port]> SOCKS5 proxy on given host + port
@@ -299,24 +348,21 @@ check_status() {
     local hostport="localhost:9050"
     local url="https://check.torproject.org/"
 
-    if curl -s -m 10 --socks5 "${hostport}" --socks5-hostname "${hostport}" -L "${url}" \
+    if curl -s -m 5 --socks5 "${hostport}" --socks5-hostname "${hostport}" -L "${url}" \
         | cat | tac | grep -q 'Congratulations'; then
         printf "${b}${green}%s${reset} ${b}%s${reset}\\n\\n" \
-               "[OK]" "Your system is configured to use Tor"
+                "[OK]" "Your system is configured to use Tor"
     else
         printf "${red}%s${reset}\\n\\n" "[!] Your system is not using Tor"
         printf "%s\\n" "try another Tor circuit with '${prog_name} --restart'"
         exit 1
     fi
 
-    # Check current public IP
     check_ip
 }
 
 
-# ===================================================================
-# Start transparent proxy
-# ===================================================================
+## Start transparent proxy through Tor
 start() {
     banner
     check_root
@@ -346,7 +392,7 @@ start() {
     # write new nameserver
     printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
 
-    # Disable IPv6 with sysctl
+    # disable IPv6 with sysctl
     printf "${b}${green}%s${reset} %s\\n" "==>" "Disable IPv6 with sysctl"
     sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
@@ -359,82 +405,34 @@ start() {
     fi
 
     # iptables settings
-    printf "${b}${green}%s${reset} %s\\n" "==>" "Set new iptables rules"
-
-    # Flush current iptables rules
-    iptables -F
-    iptables -X
-    iptables -t nat -F
-    iptables -t nat -X
-
-    # copy file `/usr/share/archtorify/data/iptables.rules` in the
-    # `/etc/iptables/` directory
-    if ! cp -f "${config_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
-        die "[ERROR] can't copy file /etc/iptables/iptables.rules"
-    fi
-
-    # set new iptables rules
-    if ! iptables-restore < /etc/iptables/iptables.rules 2>/dev/null; then
-            die "[ERROR] can't set iptables rules"
-    fi
-
-    # start iptables service
-    if ! systemctl start iptables 2>/dev/null; then
-        die "[ERROR] systemd error, exit!"
-    fi
+    setup_iptables tor_proxy
 
     # check program status
     printf "\\n"
     check_status
 
     printf "\\n${b}${green}%s${reset} ${b}%s${reset}\\n" \
-           "[OK]" "Transparent Proxy activated, your system is under Tor"
+            "[OK]" "Transparent Proxy activated, your system is under Tor"
 }
 
 
-# ===================================================================
-# Stop transparent proxy
-# ===================================================================
+## Stop transparent proxy
 #
-# Stop connection with Tor Network and return to clearnet navigation
+# stop connection with Tor Network and return to clearnet navigation
 stop() {
     check_root
 
     if systemctl is-active tor.service >/dev/null 2>&1; then
-        printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" "::" "Stopping Transparent Proxy"
+        printf "${b}${cyan}%s${reset} ${b}%s${reset}\\n" \
+                "::" "Stopping Transparent Proxy"
 
-        # Resets default iptables rules:
-        printf "${b}${green}%s${reset} %s\\n" "==>" "Restore default iptables rules"
+        # restore default iptables
+        setup_iptables default
 
-        # Flush iptables rules
-        iptables -F
-        iptables -X
-        iptables -t nat -F
-        iptables -t nat -X
-        iptables -P INPUT ACCEPT
-        iptables -P FORWARD ACCEPT
-        iptables -P OUTPUT ACCEPT
-
-        # Rewrite default `/etc/iptables.rules` file
-        # -------------------------------------------
-        printf "# Empty iptables rule file
-    *filter
-    :INPUT ACCEPT [0:0]
-    :FORWARD ACCEPT [0:0]
-    :OUTPUT ACCEPT [0:0]
-    COMMIT
-    " > "/etc/iptables/iptables.rules"
-        # EOF
-        # -------------------------------------------
-
-        # Stop tor.service
-        printf "${b}${green}%s${reset} %s\\n" "==>" "Stop Tor service"
-        systemctl stop tor.service iptables
-
-        # Restore `/etc/resolv.conf`:
+        # restore /etc/resolv.conf:
         #
-        # restore file with `resolvconf` program if exists
-        # otherwise copy the original file from backup directory
+        # restore file with resolvconf program if exists, otherwise copy the
+        # original file from backup directory
         printf "${b}${green}%s${reset} %s\\n" \
                 "==>" "Restore /etc/resolv.conf file with default DNS"
 
@@ -444,16 +442,16 @@ stop() {
             cp "${backup_dir}/resolv.conf.backup" /etc/resolv.conf
         fi
 
-        # Enable IPv6
+        # enable IPv6
         printf "${b}${green}%s${reset} %s\\n" "==>" "Enable IPv6"
         sysctl -w net.ipv6.conf.all.disable_ipv6=0 >/dev/null 2>&1
         sysctl -w net.ipv6.conf.default.disable_ipv6=0 >/dev/null 2>&1
 
-        # Restore default `/etc/tor/torrc`
+        # restore default /etc/tor/torrc
         printf "${b}${green}%s${reset} %s\\n" "==>" "Restore default /etc/tor/torrc"
         cp "${backup_dir}/torrc.backup" /etc/tor/torrc
 
-        # Restore default `/usr/lib/systemd/system/tor.service`
+        # restore default /usr/lib/systemd/system/tor.service
         printf "${b}${green}%s${reset} %s\\n" \
                 "==>" "Restore default /usr/lib/systemd/system/tor.service"
 
@@ -469,9 +467,9 @@ stop() {
 }
 
 
-# ===================================================================
-# Restart tor.service and change public IP (i.e. change Tor exit node)
-# ===================================================================
+## Restart
+#
+# restart tor.service (i.e. get new Tor exit node) and change public IP address
 restart() {
     check_root
 
@@ -485,7 +483,6 @@ restart() {
         printf "${b}${green}%s${reset} ${b}%s${reset}\\n\\n" \
                 "[OK]" "Tor Exit Node changed"
 
-        # Check current public ip
         check_ip
         exit 0
     else
@@ -494,9 +491,7 @@ restart() {
 }
 
 
-# ===================================================================
-# Show help menù
-# ===================================================================
+## Show help menù
 usage() {
     printf "%s\\n" "${prog_name} ${version}"
     printf "%s\\n" "Arch Linux - Transparent proxy through Tor"
@@ -521,11 +516,9 @@ usage() {
 }
 
 
-# ===================================================================
-# Main function
-# ===================================================================
+## Main function
 #
-# Parse command line arguments and start program
+# parse command line arguments and start program
 main() {
     if [[ "$#" -eq 0 ]]; then
         printf "%s\\n" "${prog_name}: Argument required"
