@@ -24,3 +24,11 @@ arguments
 
 Improve function for check program settings
 Improve output messages
+
+
+/** 1.24.0 / 2021-04-14 **/
+
+[committer] brainfucksec
+
+README file: change program's logo (add white background for Github dark themes)
+
