@@ -1,5 +1,5 @@
 <p align="center">
-<img src="logo.png" alt="archtorify">
+<img src="img/logo.png" alt="archtorify">
 </p>
 
 <p align="center">
@@ -42,8 +42,20 @@ To know how to install and use **archtorify** see the \[[Wiki](https://github.co
 
 ## Donate
 
-You can support archtorify by making a donation to this Bitcoin address:
+Support archtorify by making a donation:
+
+**Bitcoin**
+
+![.](img/bitcoin-address.gif)
 
 ```
 1B39SnAXcR2bkxNpNy3AuckgaTshqNc2ce
+```
+
+**Monero**
+
+![.](img/monero-address.gif)
+
+```
+42HrxGUKPzNNJKFguPfFhXQajwNDnhLbogy6EWexWw9Sh5pTumVk7dkcD2PB4MuFgD1m8rnaR3pr1g852BWUTpXaTo9rQyr
 ```
