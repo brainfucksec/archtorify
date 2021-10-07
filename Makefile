@@ -1,5 +1,5 @@
 PROGRAM_NAME=archtorify
-VERSION=1.25.0
+VERSION=1.26.0
 
 DATA_DIR=/usr/share
 LICENSE_DIR=$(DATA_DIR)/licenses
@@ -8,7 +8,6 @@ PROGRAM_DIR=/usr/bin
 
 
 install:
-
 	install -Dm644 LICENSE $(LICENSE_DIR)/$(PROGRAM_NAME)/LICENSE
 	install -Dm644 README.md $(DOCS_DIR)/$(PROGRAM_NAME)/README.md
 	install -Dm755 archtorify.sh $(PROGRAM_DIR)/$(PROGRAM_NAME)
@@ -17,7 +16,6 @@ install:
 	install -Dm644 data/* $(DATA_DIR)/$(PROGRAM_NAME)/data
 
 uninstall:
-
 	rm -Rf $(PROGRAM_DIR)/$(PROGRAM_NAME)
 	rm -Rf $(DATA_DIR)/$(PROGRAM_NAME)
 	rm -Rf $(LICENSE_DIR)/$(PROGRAM_NAME)

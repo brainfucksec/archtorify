@@ -4,11 +4,11 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.25.0                                                              #
+# version: 1.26.0                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
-# Copyright (C) 2015-2021 Brainfuck                                            #
+# Copyright (C) 2015-2021 Brainf+ck                                            #
 #                                                                              #
 #                                                                              #
 # GNU GENERAL PUBLIC LICENSE                                                   #
@@ -33,8 +33,8 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.25.0"
-readonly signature="Copyright (C) 2021 Brainfuck"
+readonly version="1.26.0"
+readonly signature="Copyright (C) 2021 Brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
 # set colors for stdout
@@ -230,10 +230,12 @@ check_settings() {
 
 ## iptables settings
 #
-# This function is used with args in start() & stop() for set/restore
-# iptables.
+# This function is used with args in start()/stop() functions
+# for set/restore iptables.
 #
-# Args:
+# Usage: setup_iptables <arg>
+#
+#   args:
 #       tor_proxy -> set rules for Tor transparent proxy
 #       default   -> restore default iptables
 setup_iptables() {
@@ -241,7 +243,7 @@ setup_iptables() {
         tor_proxy)
             printf "%s\\n" "Set iptables rules"
 
-            ## flush current iptables rules
+            ## Flush current iptables rules
             iptables -F
             iptables -X
             iptables -t nat -F
@@ -250,8 +252,7 @@ setup_iptables() {
             iptables -P FORWARD ACCEPT
             iptables -P OUTPUT ACCEPT
 
-            # copy file /usr/share/archtorify/data/iptables.rules in the
-            # /etc/iptables/ directory
+            # copy /usr/share/archtorify/data/iptables.rules to /etc/iptables/
             if ! cp -f "${config_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
                 die "can't copy file /etc/iptables/iptables.rules"
             fi
@@ -302,8 +303,8 @@ COMMIT
 
 ## Check public IP address
 #
-# Make an HTTP request to the URL in the list, if the first request fails, try
-# with the next, then print the IP address.
+# Make an HTTP request to the ip api service on the list, if the
+# first request fails, try with the next, then print the IP address.
 #
 # Thanks to "NotMilitaryAI" for this function
 check_ip() {
@@ -408,7 +409,7 @@ start() {
     sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
 
-    # restart tor.service
+    # start tor.service
     printf "%s\\n" "Start Tor service"
 
     if ! systemctl start tor.service 2>/dev/null; then
@@ -513,6 +514,7 @@ usage() {
     printf "%s\\n" "-s, --status    check status of program and services"
     printf "%s\\n" "-i, --ipinfo    show public IP address"
     printf "%s\\n" "-r, --restart   restart tor service and change IP address"
+    printf "%s\\n" "-b, --banner    show program banner"
     printf "%s\\n\\n" "-v, --version   display program version and exit"
 
     printf "%s\\n" "Project URL: ${git_url}"
@@ -549,6 +551,9 @@ main() {
             -i | --ipinfo)
                 check_ip
                 ;;
+            -b | --banner)
+                banner
+                ;;
             -v | --version)
                 print_version
                 ;;
@@ -562,7 +567,7 @@ main() {
                 exit 1
                 ;;
         esac
-        shift
+        exit 0
     done
 }
 

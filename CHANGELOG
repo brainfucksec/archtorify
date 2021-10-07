@@ -40,3 +40,9 @@ README file: change program's logo (add white background for Github dark themes)
 Update README, Wiki
 Little changes on output messages
 
+
+/** 1.26.0 / 2021-10-05 **/
+
+[committer] brainfucksec
+
+Add option `--banner`
