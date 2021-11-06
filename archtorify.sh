@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.26.0                                                              #
+# version: 1.26.1                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,7 +33,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.26.0"
+readonly version="1.26.1"
 readonly signature="Copyright (C) 2021 Brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -73,7 +73,7 @@ ${reset}\\n\\n"
 
 ## Print a message and exit with (1) when an error occurs
 die() {
-    printf "${red}%s${reset}\\n" "[ERROR] ${@}" >&2
+    printf "${red}%s${reset}\\n" "[ERROR] $*" >&2
     exit 1
 }
 
@@ -142,10 +142,12 @@ replace_file() {
 check_settings() {
     info "Check program settings"
 
+    # tor package
     if ! hash tor 2>/dev/null; then
         die "tor isn't installed, exit"
     fi
 
+    # directories
     if [[ ! -d "${backup_dir}" ]]; then
         die "directory '${backup_dir}' not exist, run makefile first!"
     fi
@@ -154,33 +156,32 @@ check_settings() {
         die "directory '${config_dir}' not exist, run makefile first!"
     fi
 
-    # check /usr/lib/systemd/system/tor.service
-    #
-    # grep required strings from existing file
+    # /usr/lib/systemd/system/tor.service
     grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
-    local string1=$?
+    local rstring1=$?
 
     grep -q -x 'User=root' /usr/lib/systemd/system/tor.service
-    local string2=$?
+    local rstring2=$?
 
     grep -q -x 'Group=root' /usr/lib/systemd/system/tor.service
-    local string3=$?
+    local rstring3=$?
 
     grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
-    local string4=$?
+    local rstring4=$?
 
-    # if required strings does not exists copy new tor.service file
-    if [[ "$string1" -ne 0 ]] ||
-       [[ "$string2" -ne 0 ]] ||
-       [[ "$string3" -ne 0 ]] ||
-       [[ "$string4" -ne 0 ]]; then
+    # if required strings does not exists copy tor.service file from
+    # /usr/share/archtorify/data
+    if [[ "$rstring1" -ne 0 ]] ||
+       [[ "$rstring2" -ne 0 ]] ||
+       [[ "$rstring3" -ne 0 ]] ||
+       [[ "$rstring4" -ne 0 ]]; then
 
         printf "%s\\n" "Set file: /usr/lib/systemd/system/tor.service"
 
         replace_file /usr/lib/systemd/system/tor.service tor.service
     fi
 
-    # check /var/lib/tor permissions
+    # /var/lib/tor permissions
     #
     # required:
     # -rwx------  tor tor
@@ -193,30 +194,30 @@ check_settings() {
         chmod -R 700 /var/lib/tor
     fi
 
-    # check /etc/tor/torrc
+    # /etc/tor/torrc
     if [[ ! -f /etc/tor/torrc ]]; then
         die "/etc/tor/torrc file not exist, check Tor configuration"
     fi
 
     # if torrc exist grep required strings
     grep -q -x 'User tor' /etc/tor/torrc
-    local string1=$?
+    local rstring1=$?
 
-    grep -q -x 'SocksPort 9050' /etc/tor/torrc
-    local string2=$?
+    grep -q -x 'SocksPort 9050 IsolateClientAddr IsolateClientProtocol IsolateDestAddr' /etc/tor/torrc
+    local rstring2=$?
 
     grep -q -x 'DNSPort 53' /etc/tor/torrc
-    local string3=$?
+    local rstring3=$?
 
-    grep -q -x 'TransPort 9040' /etc/tor/torrc
-    local string4=$?
+    grep -q -x 'TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr' /etc/tor/torrc
+    local rstring4=$?
 
-    # if required strings does not exists copy file
-    # /usr/share/archtorify/data/torrc
-    if [[ "$string1" -ne 0 ]] ||
-       [[ "$string2" -ne 0 ]] ||
-       [[ "$string3" -ne 0 ]] ||
-       [[ "$string4" -ne 0 ]]; then
+    # if required strings does not exists copy torrc file
+    # /usr/share/archtorify/data
+    if [[ "$rstring1" -ne 0 ]] ||
+       [[ "$rstring2" -ne 0 ]] ||
+       [[ "$rstring3" -ne 0 ]] ||
+       [[ "$rstring4" -ne 0 ]]; then
 
         printf "%s\\n" "Set /etc/tor/torrc"
         replace_file /etc/tor/torrc torrc
@@ -489,7 +490,6 @@ restart() {
 
         systemctl restart tor.service iptables
         sleep 1
-        msg "IP address changed"
         check_ip
         exit 0
     else
@@ -571,6 +571,7 @@ main() {
     done
 }
 
-
 # Call main
 main "${@}"
+
+

@@ -46,3 +46,12 @@ Little changes on output messages
 [committer] brainfucksec
 
 Add option `--banner`
+
+
+/** 1.26.1 / 2021-11-06 **/
+
+[committer] brainfucksec
+
+Fix update:
+
+Fix error exception function
