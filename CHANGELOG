@@ -1,12 +1,9 @@
 /** archtorify CHANGELOG **/
 
-CHANGELOG file, please see `CHANGELOG.old` for old changes.
-
 IMPORTANT:
 
 Only changes that are important to users will be written to this file.
 Please see git `/commits/master` for technical details of the program changes.
-
 
 ```
 Format:
@@ -55,3 +52,10 @@ Add option `--banner`
 Fix update:
 
 Fix error exception function
+
+
+/** 1.27.0 / 2022-02-21 **/
+
+[committer] brainfucksec
+
+Changes on data/torrc (/etc/tor/torrc)

@@ -4,11 +4,11 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.26.1                                                              #
+# version: 1.27.0                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
-# Copyright (C) 2015-2021 Brainf+ck                                            #
+# Copyright (C) 2015-2022 brainf+ck                                            #
 #                                                                              #
 #                                                                              #
 # GNU GENERAL PUBLIC LICENSE                                                   #
@@ -33,8 +33,8 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.26.1"
-readonly signature="Copyright (C) 2021 Brainf+ck"
+readonly version="1.27.0"
+readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
 # set colors for stdout
@@ -48,12 +48,10 @@ export white="$(tput setaf 7)"
 export b="$(tput bold)"
 export reset="$(tput sgr0)"
 
+
 ## Directories
-#
-# config files:
-readonly config_dir="/usr/share/archtorify/data"
-# backups:
-readonly backup_dir="/usr/share/archtorify/backups"
+readonly config_dir="/usr/share/archtorify/data"    # config files
+readonly backup_dir="/usr/share/archtorify/backups" # backups
 
 
 ## Show program banner
@@ -98,11 +96,11 @@ check_root() {
 }
 
 
-## Display program version
+## Display program version and license
 print_version() {
     printf "%s\\n" "${prog_name} ${version}"
     printf "%s\\n" "${signature}"
-    printf "%s\\n" "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>"
+    printf "%s\\n" "License GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>"
     printf "%s\\n" "This is free software: you are free to change and redistribute it."
     printf "%s\\n" "There is NO WARRANTY, to the extent permitted by law."
     exit 0
@@ -111,21 +109,23 @@ print_version() {
 
 ## Replace system files
 #
-# Backup default system files --> /usr/share/archtorify/backups
-# replace with archtorify files <-- /usr/share/archtorify/data.
+# Backup default system file to: /usr/share/archtorify/backups
+# Replace with file from: /usr/share/archtorify/data
 #
-# Function usage: replace_file <default_file> <new_file>
+# Usage: replace_file <default_file> <new_file>
+# when <new_file> is a file in the /usr/share/archtorify/data ($config_dir)
+#
 # e.g.: replace_file /etc/tor/torrc torrc
 replace_file() {
     local default_file="$1"
     local new_file="$2"
 
-    # backup
+    # backup to ${backup_dir}
     if ! cp "$1" "${backup_dir}/$2.backup" 2>/dev/null; then
         die "can't backup '$1'"
     fi
 
-    # replace
+    # replace from ${config_dir}
     if ! cp "${config_dir}/$2" "$1" 2>/dev/null; then
         die "can't set '$1'"
     fi
@@ -135,7 +135,7 @@ replace_file() {
 ## Check program settings
 #
 # - tor package
-# - program folders, see: ${backup_dir}, ${config_dir}
+# - program directories, see: ${backup_dir}, ${config_dir}
 # - tor systemd service file: /usr/lib/systemd/system/tor.service
 # - tor configuration file: /etc/tor/torrc
 # - directory permissions: /var/lib/tor
@@ -156,30 +156,13 @@ check_settings() {
         die "directory '${config_dir}' not exist, run makefile first!"
     fi
 
-    # /usr/lib/systemd/system/tor.service
-    grep -q -x '\[Service\]' /usr/lib/systemd/system/tor.service
-    local rstring1=$?
+    # replace /usr/lib/systemd/system/tor.service
+    printf "%s\\n" "Set /usr/lib/systemd/system/tor.service"
+    replace_file /usr/lib/systemd/system/tor.service tor.service
 
-    grep -q -x 'User=root' /usr/lib/systemd/system/tor.service
-    local rstring2=$?
-
-    grep -q -x 'Group=root' /usr/lib/systemd/system/tor.service
-    local rstring3=$?
-
-    grep -q -x 'Type=simple' /usr/lib/systemd/system/tor.service
-    local rstring4=$?
-
-    # if required strings does not exists copy tor.service file from
-    # /usr/share/archtorify/data
-    if [[ "$rstring1" -ne 0 ]] ||
-       [[ "$rstring2" -ne 0 ]] ||
-       [[ "$rstring3" -ne 0 ]] ||
-       [[ "$rstring4" -ne 0 ]]; then
-
-        printf "%s\\n" "Set file: /usr/lib/systemd/system/tor.service"
-
-        replace_file /usr/lib/systemd/system/tor.service tor.service
-    fi
+    # replace /etc/tor/torrc
+    printf "%s\\n" "Set /etc/tor/torrc"
+    replace_file /etc/tor/torrc torrc
 
     # /var/lib/tor permissions
     #
@@ -192,35 +175,6 @@ check_settings() {
         printf "%s\\n" "Set permissions of /var/lib/tor directory"
         chown -R tor:tor /var/lib/tor
         chmod -R 700 /var/lib/tor
-    fi
-
-    # /etc/tor/torrc
-    if [[ ! -f /etc/tor/torrc ]]; then
-        die "/etc/tor/torrc file not exist, check Tor configuration"
-    fi
-
-    # if torrc exist grep required strings
-    grep -q -x 'User tor' /etc/tor/torrc
-    local rstring1=$?
-
-    grep -q -x 'SocksPort 9050 IsolateClientAddr IsolateClientProtocol IsolateDestAddr' /etc/tor/torrc
-    local rstring2=$?
-
-    grep -q -x 'DNSPort 53' /etc/tor/torrc
-    local rstring3=$?
-
-    grep -q -x 'TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr' /etc/tor/torrc
-    local rstring4=$?
-
-    # if required strings does not exists copy torrc file
-    # /usr/share/archtorify/data
-    if [[ "$rstring1" -ne 0 ]] ||
-       [[ "$rstring2" -ne 0 ]] ||
-       [[ "$rstring3" -ne 0 ]] ||
-       [[ "$rstring4" -ne 0 ]]; then
-
-        printf "%s\\n" "Set /etc/tor/torrc"
-        replace_file /etc/tor/torrc torrc
     fi
 
     # reload systemd daemons for save changes
@@ -253,9 +207,9 @@ setup_iptables() {
             iptables -P FORWARD ACCEPT
             iptables -P OUTPUT ACCEPT
 
-            # copy /usr/share/archtorify/data/iptables.rules to /etc/iptables/
+            # copy /etc/iptables/iptables.rules file
             if ! cp -f "${config_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
-                die "can't copy file /etc/iptables/iptables.rules"
+                die "can't copy /etc/iptables/iptables.rules"
             fi
 
             # set new iptables rules
@@ -307,7 +261,7 @@ COMMIT
 # Make an HTTP request to the ip api service on the list, if the
 # first request fails, try with the next, then print the IP address.
 #
-# Thanks to "NotMilitaryAI" for this function
+# Thanks to NotMilitaryAI for this function.
 check_ip() {
     info "Check public IP Address"
 
@@ -348,7 +302,7 @@ check_status() {
 
     # make HTTP request with curl at: https://check.torproject.org/
     # and grep the necessary strings from the html page to test connection
-    # with tor
+    # with Tor.
     info "Check Tor network settings"
 
     # curl option details:
@@ -366,7 +320,7 @@ check_status() {
         printf "${b}${green}%s${reset} %s\\n\\n" \
                 "[OK]" "Your system is configured to use Tor"
     else
-        printf "${red}%s${reset}\\n\\n" "[!] Your system is not using Tor"
+        printf "${red}%s${reset}\\n\\n" "Your system is not using Tor!"
         printf "%s\\n" "try another Tor circuit with '${prog_name} --restart'"
         exit 1
     fi
@@ -573,5 +527,4 @@ main() {
 
 # Call main
 main "${@}"
-
 

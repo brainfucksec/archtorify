@@ -19,10 +19,11 @@ Transparent Proxy through Tor for Arch Linux
 
 In simple terms, with archtorify you can redirect all traffic of your Arch Linux operating system through the Tor Network.
 
+See: [ArchWiki: Tor - Transparent Torification](https://wiki.archlinux.org/title/Tor#Transparent_Torification)
+
 ## Getting started
 
-To know how to install and use **archtorify** see the \[[Wiki](https://github.com/brainfucksec/archtorify/wiki)\]
-
+[To know how to install and use archtorify see the Wiki](https://github.com/brainfucksec/archtorify/wiki)
 
 ## Credits
 
