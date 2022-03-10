@@ -59,3 +59,10 @@ Fix error exception function
 [committer] brainfucksec
 
 Changes on data/torrc (/etc/tor/torrc)
+
+
+/** 1.27.1 / 2022-03-10 **/
+
+[committer] brainfucksec
+
+Fix curl request in check_status() function (archtorify -s, --status)
