@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.27.1                                                              #
+# version: 1.27.2                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,7 +33,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.27.1"
+readonly version="1.27.2"
 readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -266,8 +266,6 @@ check_ip() {
     info "Check public IP Address"
 
     local url_list=(
-        'http://ip-api.com/'
-        'https://ipleak.net/json/'
         'https://ipinfo.io/'
         'https://api.myip.com/'
     )

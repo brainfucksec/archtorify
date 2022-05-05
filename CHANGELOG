@@ -66,3 +66,10 @@ Changes on data/torrc (/etc/tor/torrc)
 [committer] brainfucksec
 
 Fix curl request in check_status() function (archtorify -s, --status)
+
+
+/** 1.27.2 / 2022-05-05 **/
+
+[committer] brainfucksec
+
+Fix function check_ip()
