@@ -15,7 +15,7 @@
 ## for more options you can use in this file.
 ##
 ## Tor will look for this file in various places based on your platform:
-## https://www.torproject.org/docs/faq#torrc
+## https://support.torproject.org/#tbb-editing-torrc
 
 ## The directory for keeping all the keys/etc. By default, we store
 ## things in $HOME/.tor on Unix, and in Application Data\tor on Windows.

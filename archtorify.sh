@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.27.2                                                              #
+# version: 1.28.0                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,16 +33,13 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.27.2"
+readonly version="1.28.0"
 readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
 # set colors for stdout
 export red="$(tput setaf 1)"
 export green="$(tput setaf 2)"
-export yellow="$(tput setaf 3)"
-export blue="$(tput setaf 4)"
-export magenta="$(tput setaf 5)"
 export cyan="$(tput setaf 6)"
 export white="$(tput setaf 7)"
 export b="$(tput bold)"
@@ -271,7 +268,7 @@ check_ip() {
     )
 
     for url in "${url_list[@]}"; do
-        local request="$(curl -s "$url")"
+        local request="$(curl -s -m 5 "$url")"
         local response="$?"
 
         if [[ "$response" -ne 0 ]]; then
@@ -302,6 +299,7 @@ check_status() {
     # and grep the necessary strings from the html page to test connection
     # with Tor.
     info "Check Tor network settings"
+    sleep 1
 
     # curl socks options:
     #   --socks5 <host[:port]> SOCKS5 proxy on given host + port
@@ -309,10 +307,9 @@ check_status() {
     local hostport="localhost:9050"
     local url="https://check.torproject.org/"
 
-    if curl -s -m 6 --socks5 "${hostport}" --socks5-hostname "${hostport}" "${url}" \
+    if curl -s -m 5 --socks5 "${hostport}" --socks5-hostname "${hostport}" "${url}" \
         | grep -q 'Congratulations'; then
-        printf "${b}${green}%s${reset} %s\\n\\n" \
-                "[OK]" "Your system is configured to use Tor"
+        msg "Your system is configured to use Tor"
     else
         printf "${red}%s${reset}\\n\\n" "Your system is not using Tor!"
         printf "%s\\n" "try another Tor circuit with '${prog_name} --restart'"
@@ -343,7 +340,7 @@ start() {
     #
     # write nameserver 127.0.0.1 to etc/resolv.conf file
     # i.e. use Tor DNSPort (see: /etc/tor/torrc)
-    printf "%s\\n" "Configure DNS to use Tor's DNSPort"
+    printf "%s\\n" "Configure resolv.conf file to use Tor DNSPort"
 
     # backup current resolv.conf
     if ! cp /etc/resolv.conf "${backup_dir}/resolv.conf.backup"; then
@@ -417,8 +414,7 @@ stop() {
         cp "${backup_dir}/tor.service.backup" /usr/lib/systemd/system/tor.service
 
 
-        printf "\\n${b}${green}%s${reset} %s\\n" \
-                "[-]" "Transparent Proxy stopped"
+        printf "\\n${b}${green}%s${reset} %s\\n" "[-]" "Transparent Proxy stopped"
         exit 0
     else
         die "Tor service is not running! exit"
