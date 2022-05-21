@@ -73,3 +73,11 @@ Fix curl request in check_status() function (archtorify -s, --status)
 [committer] brainfucksec
 
 Fix function check_ip()
+
+
+/** 1.29.0 / 2022-05-20 **/
+
+[committer] brainfucksec
+
+Change backup directory (old: /usr/share/archtorify/backups, new: /var/lib/archtorify/backups)
+Change Makefile

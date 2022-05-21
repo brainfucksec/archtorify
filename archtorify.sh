@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.28.0                                                              #
+# version: 1.29.0                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,7 +33,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.28.0"
+readonly version="1.29.0"
 readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -47,8 +47,8 @@ export reset="$(tput sgr0)"
 
 
 ## Directories
-readonly config_dir="/usr/share/archtorify/data"    # config files
-readonly backup_dir="/usr/share/archtorify/backups" # backups
+readonly data_dir="/usr/share/archtorify/data"      # config files
+readonly backup_dir="/var/lib/archtorify/backups"   # backups
 
 
 ## Show program banner
@@ -106,24 +106,23 @@ print_version() {
 
 ## Replace system files
 #
-# Backup default system file to: /usr/share/archtorify/backups
-# Replace with file from: /usr/share/archtorify/data
+# Backup default system file to ${backup_dir}
+# Replace with file from ${data_dir}
 #
 # Usage: replace_file <default_file> <new_file>
-# when <new_file> is a file in the /usr/share/archtorify/data ($config_dir)
+#
+# when <new_file> is a file in the /usr/share/archtorify/data "${data_dir}"
 #
 # e.g.: replace_file /etc/tor/torrc torrc
 replace_file() {
     local default_file="$1"
     local new_file="$2"
 
-    # backup to ${backup_dir}
     if ! cp "$1" "${backup_dir}/$2.backup" 2>/dev/null; then
         die "can't backup '$1'"
     fi
 
-    # replace from ${config_dir}
-    if ! cp "${config_dir}/$2" "$1" 2>/dev/null; then
+    if ! cp "${data_dir}/$2" "$1" 2>/dev/null; then
         die "can't set '$1'"
     fi
 }
@@ -132,7 +131,7 @@ replace_file() {
 ## Check program settings
 #
 # - tor package
-# - program directories, see: ${backup_dir}, ${config_dir}
+# - program directories, see: ${data_dir}, ${backup_dir}
 # - tor systemd service file: /usr/lib/systemd/system/tor.service
 # - tor configuration file: /etc/tor/torrc
 # - directory permissions: /var/lib/tor
@@ -149,8 +148,8 @@ check_settings() {
         die "directory '${backup_dir}' not exist, run makefile first!"
     fi
 
-    if [[ ! -d "${config_dir}" ]]; then
-        die "directory '${config_dir}' not exist, run makefile first!"
+    if [[ ! -d "${data_dir}" ]]; then
+        die "directory '${data_dir}' not exist, run makefile first!"
     fi
 
     # replace /usr/lib/systemd/system/tor.service
@@ -205,7 +204,7 @@ setup_iptables() {
             iptables -P OUTPUT ACCEPT
 
             # copy /etc/iptables/iptables.rules file
-            if ! cp -f "${config_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
+            if ! cp -f "${data_dir}/iptables.rules" /etc/iptables/iptables.rules 2>/dev/null; then
                 die "can't copy /etc/iptables/iptables.rules"
             fi
 
