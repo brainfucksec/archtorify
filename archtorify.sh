@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.29.0                                                              #
+# version: 1.30.0                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,7 +33,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.29.0"
+readonly version="1.30.0"
 readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -128,14 +128,15 @@ replace_file() {
 }
 
 
-## Check program settings
+## Configure general settings
 #
 # - tor package
 # - program directories, see: ${data_dir}, ${backup_dir}
 # - tor systemd service file: /usr/lib/systemd/system/tor.service
 # - tor configuration file: /etc/tor/torrc
 # - directory permissions: /var/lib/tor
-check_settings() {
+# - DNS settings: /etc/resolv.conf
+setup_general() {
     info "Check program settings"
 
     # tor package
@@ -172,6 +173,26 @@ check_settings() {
         chown -R tor:tor /var/lib/tor
         chmod -R 700 /var/lib/tor
     fi
+
+    # DNS settings: /etc/resolv.conf:
+    #
+    # write nameserver 127.0.0.1 to etc/resolv.conf file
+    # i.e. use Tor DNSPort (see: /etc/tor/torrc)
+    printf "%s\\n" "Configure resolv.conf file to use Tor DNSPort"
+
+    # backup current resolv.conf
+    if ! cp /etc/resolv.conf "${backup_dir}/resolv.conf.backup"; then
+        die "can't backup /etc/resolv.conf"
+    fi
+
+    # if systemd-resolved is used /etc/resolv.conf is a symlink to
+    # /run/systemd/resolve/stub-resolv.conf, so remove it first
+    if systemctl is-active systemd-resolved.service >/dev/null 2>&1; then
+        systemctl stop systemd-resolved.service
+        rm /etc/resolv.conf
+    fi
+
+    printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
 
     # reload systemd daemons for save changes
     printf  "%s\\n" "Reload systemd daemons"
@@ -298,7 +319,7 @@ check_status() {
     # and grep the necessary strings from the html page to test connection
     # with Tor.
     info "Check Tor network settings"
-    sleep 1
+    sleep 1 #this is required
 
     # curl socks options:
     #   --socks5 <host[:port]> SOCKS5 proxy on given host + port
@@ -330,24 +351,10 @@ start() {
 
     banner
     sleep 2
-    check_settings
+    setup_general
 
     printf "\\n"
     info "Starting Transparent Proxy"
-
-    # DNS settings: /etc/resolv.conf:
-    #
-    # write nameserver 127.0.0.1 to etc/resolv.conf file
-    # i.e. use Tor DNSPort (see: /etc/tor/torrc)
-    printf "%s\\n" "Configure resolv.conf file to use Tor DNSPort"
-
-    # backup current resolv.conf
-    if ! cp /etc/resolv.conf "${backup_dir}/resolv.conf.backup"; then
-        die "can't backup /etc/resolv.conf"
-    fi
-
-    # write new nameserver
-    printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
 
     # disable IPv6
     printf "%s\\n" "Disable IPv6 with sysctl"
@@ -387,14 +394,18 @@ stop() {
         setup_iptables default
 
         # restore /etc/resolv.conf:
-        #
-        # restore file with resolvconf program if exists, otherwise copy the
-        # original file from backup directory
         printf "%s\\n" "Restore default DNS"
 
+        # if resolvconf is used restore the file with it
         if hash resolvconf 2>/dev/null; then
             resolvconf -u
+        # elif systemd-resolved is enabled restore symlink
+        # see: https://wiki.archlinux.org/title/Systemd-resolved#DNS
+        elif systemctl is-enabled systemd-resolved.service >/dev/null 2>&1; then
+            ln -rsf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+            systemctl start systemd-resolved
         else
+        # restore original file from ${backup_dir}
             cp "${backup_dir}/resolv.conf.backup" /etc/resolv.conf
         fi
 
@@ -411,7 +422,6 @@ stop() {
         printf "%s\\n" "Restore default /usr/lib/systemd/system/tor.service"
 
         cp "${backup_dir}/tor.service.backup" /usr/lib/systemd/system/tor.service
-
 
         printf "\\n${b}${green}%s${reset} %s\\n" "[-]" "Transparent Proxy stopped"
         exit 0

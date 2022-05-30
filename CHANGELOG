@@ -81,3 +81,8 @@ Fix function check_ip()
 
 Change backup directory (old: /usr/share/archtorify/backups, new: /var/lib/archtorify/backups)
 Change Makefile
+
+
+/** 1.30.0 / 2022-05-30 **/
+
+Various fixes and changes (see: last commit)

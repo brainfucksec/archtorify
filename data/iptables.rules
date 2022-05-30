@@ -4,12 +4,12 @@
 :OUTPUT ACCEPT [17:6239]
 :POSTROUTING ACCEPT [6:408]
 
--A PREROUTING ! -i lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
+#-A PREROUTING ! -i lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353
 -A PREROUTING ! -i lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 -A OUTPUT -o lo -j RETURN
 --ipv4 -A OUTPUT -d 192.168.0.0/16 -j RETURN
 -A OUTPUT -m owner --uid-owner "tor" -j RETURN
--A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
+#-A OUTPUT -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353
 -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 COMMIT
 

@@ -1,5 +1,5 @@
 PROGRAM_NAME=archtorify
-VERSION=1.29.0
+VERSION=1.30.0
 
 DATA_DIR=/usr/share
 BACKUP_DIR=/var/lib
