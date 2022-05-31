@@ -4,7 +4,7 @@
 #                                                                              #
 # archtorify.sh                                                                #
 #                                                                              #
-# version: 1.30.0                                                              #
+# version: 1.30.1                                                              #
 #                                                                              #
 # Arch Linux - Transparent proxy through Tor                                   #
 #                                                                              #
@@ -33,7 +33,7 @@
 #
 # program information
 readonly prog_name="archtorify"
-readonly version="1.30.0"
+readonly version="1.30.1"
 readonly signature="Copyright (C) 2022 brainf+ck"
 readonly git_url="https://github.com/brainfucksec/archtorify"
 
@@ -177,7 +177,7 @@ setup_general() {
     # DNS settings: /etc/resolv.conf:
     #
     # write nameserver 127.0.0.1 to etc/resolv.conf file
-    # i.e. use Tor DNSPort (see: /etc/tor/torrc)
+    # i.e. use Tor DNSPort
     printf "%s\\n" "Configure resolv.conf file to use Tor DNSPort"
 
     # backup current resolv.conf
@@ -185,13 +185,14 @@ setup_general() {
         die "can't backup /etc/resolv.conf"
     fi
 
-    # if systemd-resolved is used /etc/resolv.conf is a symlink to
-    # /run/systemd/resolve/stub-resolv.conf, so remove it first
+    # if systemd-resolved is used then /etc/resolv.conf is a symlink to
+    # /run/systemd/resolve/stub-resolv.conf, so remove it first.
     if systemctl is-active systemd-resolved.service >/dev/null 2>&1; then
         systemctl stop systemd-resolved.service
         rm /etc/resolv.conf
     fi
 
+    # write new nameserver
     printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
 
     # reload systemd daemons for save changes
@@ -207,7 +208,7 @@ setup_general() {
 #
 # Usage: setup_iptables <arg>
 #
-#   args:
+# function args:
 #       tor_proxy -> set rules for Tor transparent proxy
 #       default   -> restore default iptables
 setup_iptables() {
@@ -280,15 +281,18 @@ COMMIT
 #
 # Thanks to NotMilitaryAI for this function.
 check_ip() {
-    info "Check public IP Address"
 
+    # IP API URLs list
     local url_list=(
         'https://ipinfo.io/'
         'https://api.myip.com/'
+        'https://ifconfig.me/'
     )
 
+    info "Check public IP Address"
+
     for url in "${url_list[@]}"; do
-        local request="$(curl -s -m 5 "$url")"
+        local request="$(curl -s "$url")"
         local response="$?"
 
         if [[ "$response" -ne 0 ]]; then
@@ -319,16 +323,14 @@ check_status() {
     # and grep the necessary strings from the html page to test connection
     # with Tor.
     info "Check Tor network settings"
-    sleep 1 #this is required
 
-    # curl socks options:
+    # curl SOCKS options:
     #   --socks5 <host[:port]> SOCKS5 proxy on given host + port
     #   --socks5-hostname <host[:port]> SOCKS5 proxy, pass host name to proxy
     local hostport="localhost:9050"
     local url="https://check.torproject.org/"
 
-    if curl -s -m 5 --socks5 "${hostport}" --socks5-hostname "${hostport}" "${url}" \
-        | grep -q 'Congratulations'; then
+    if curl --socks5 "${hostport}" --socks5-hostname "${hostport}" -s "${url}" | cat | grep -q 'Congratulations'; then
         msg "Your system is configured to use Tor"
     else
         printf "${red}%s${reset}\\n\\n" "Your system is not using Tor!"
@@ -390,7 +392,7 @@ stop() {
     if systemctl is-active tor.service >/dev/null 2>&1; then
         info "Stopping Transparent Proxy"
 
-        # restore default iptables
+        # restore default iptables rules
         setup_iptables default
 
         # restore /etc/resolv.conf:
@@ -467,7 +469,6 @@ usage() {
     printf "%s\\n" "-s, --status    check status of program and services"
     printf "%s\\n" "-i, --ipinfo    show public IP address"
     printf "%s\\n" "-r, --restart   restart tor service and change IP address"
-    printf "%s\\n" "-b, --banner    show program banner"
     printf "%s\\n\\n" "-v, --version   display program version and exit"
 
     printf "%s\\n" "Project URL: ${git_url}"
@@ -503,9 +504,6 @@ main() {
                 ;;
             -i | --ipinfo)
                 check_ip
-                ;;
-            -b | --banner)
-                banner
                 ;;
             -v | --version)
                 print_version
