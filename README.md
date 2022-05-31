@@ -10,7 +10,7 @@ Transparent Proxy through Tor for Arch Linux
 <a href="https://github.com/brainfucksec/archtorify/commits/master"><img src="https://img.shields.io/badge/version-1.30.1-blue"></a>
 <a href="https://github.com/brainfucksec/archtorify/wiki"><img src="https://img.shields.io/badge/docs-passing-brightgreen.svg"></a>
 <a href="https://github.com/brainfucksec/archtorify/blob/master/LICENSE"><img src="https://img.shields.io/github/license/brainfucksec/archtorify.svg"></a>
-<a href="https://github.com/brainfucksec/kalitorify/network/members"><img src="https://img.shields.io/github/forks/brainfucksec/archtorify.svg"></a>
+<a href="https://github.com/brainfucksec/archtorify/network/members"><img src="https://img.shields.io/github/forks/brainfucksec/archtorify.svg"></a>
 </p>
 
 ## About archtorify
