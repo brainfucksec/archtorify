@@ -43,7 +43,7 @@ See: [ArchWiki: Tor - Transparent Torification](https://wiki.archlinux.org/title
 
 ## Donations
 
-Please donate a litte to support my projects:
+Please donate a little to support my projects:
 
 **Bitcoin**
 
